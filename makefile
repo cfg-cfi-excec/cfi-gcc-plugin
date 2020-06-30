@@ -17,19 +17,19 @@ CXXFLAGS += -I$(CC_RISCV32)
 LDFLAGS = -std=c++11
 
 # top level goal: build our plugin as a shared library
-all: warn_unused.so
+all: gcc_plugin.so
 
-warn_unused.so: warn_unused.o
+gcc_plugin.so: gcc_plugin.o
 	$(CXX) $(LDFLAGS) -shared -o $@ $<
 
-warn_unused.o : warn_unused.cc
+gcc_plugin.o : gcc_plugin.cc
 	$(CXX) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f warn_unused.o warn_unused.so
+	rm -f gcc_plugin.o gcc_plugin.so
 
-check: warn_unused.so test.cc
-	$(CCX_RISCV32) -fplugin=./warn_unused.so -c test.cc -o /dev/null 2> test.dot
+check: gcc_plugin.so test.cc
+	$(CCX_RISCV32) -fplugin=./gcc_plugin.so -c test.cc -o /dev/null 2> test.dot
 	dot -Tpdf test.dot > test.pdf
 	xdg-open test.pdf
  
