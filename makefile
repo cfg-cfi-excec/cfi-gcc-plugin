@@ -22,15 +22,13 @@ all: gcc_plugin.so
 gcc_plugin.so: gcc_plugin.o
 	$(CXX) $(LDFLAGS) -shared -o $@ $<
 
-gcc_plugin.o : gcc_plugin.cc
+gcc_plugin.o : gcc_plugin.cc 
 	$(CXX) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f gcc_plugin.o gcc_plugin.so
+	rm -f gcc_plugin.o gcc_plugin.so test
 
 check: gcc_plugin.so test.cc
-	$(CCX_RISCV32) -fplugin=./gcc_plugin.so -c test.cc -o /dev/null 2> test.dot
-	dot -Tpdf test.dot > test.pdf
-	xdg-open test.pdf
+	$(CCX_RISCV32) -fplugin=./gcc_plugin.so -c test.cc -o test
  
 .PHONY: all clean check

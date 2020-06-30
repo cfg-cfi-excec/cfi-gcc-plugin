@@ -9,4 +9,5 @@ gcc-install
 *.pdf
 *.so
 test.cc
+test
 
