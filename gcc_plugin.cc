@@ -149,14 +149,32 @@ struct my_first_pass : gimple_opt_pass
       printf ("   Generating CFICHK (first BB) \n");
 
       FOR_EACH_BB_FN(bb, cfun){
-        unsigned int idBB = (bb->index);
+          
+        // First in BB
+        // rtx_insn* firstInsn = firstRealINSN(bb);
+        // emitAsmInput("cfi_call", firstInsn, bb, false);
+
+        // Last in BB
+        // rtx_insn* lastInsn = lastRealINSN(bb);
+        // emitAsmInput("cfi_ret", lastInsn, bb, false);
+
+        //unsigned int idBB = (bb->index);
         //printf("INDEX of BB: %d (last is %d) \n", idBB, last_basic_block_for_fn(cfun));
-      
+
+        rtx_insn* insn;
+        FOR_BB_INSNS (bb, insn) {
+          if (CALL_P (insn)) {
+            emitAsmInput("cfibr 0x123", NEXT_INSN(insn), bb, false);
+            emitAsmInput("cfiprc 0x123", insn, bb, false);
+            printf("   Generating CFIBR and CFIPRC (around JALR)\n");
+          }
+        }
+
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          emitAsmInput("cfiret 0x69", lastInsn, bb, false);
+          emitAsmInput("cfiret", lastInsn, bb, false);
           printf ("   Generating CFIRET (last BB) \n");
-        }  
+        } 
 
         //printf ("   ENTRY_BLOCK_PTR_FOR_FN %ld \n", ENTRY_BLOCK_PTR_FOR_FN(cfun));
         //printf ("   EXIT_BLOCK_PTR_FOR_FN %ld \n", EXIT_BLOCK_PTR_FOR_FN(cfun));
