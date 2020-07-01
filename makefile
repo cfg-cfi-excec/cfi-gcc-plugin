@@ -2,7 +2,7 @@ GCCDIR = /home/mario/gcc-plugins/gcc-install/bin
 
 
 CXX = $(GCCDIR)/g++
-CCX_RISCV32 = /opt/riscv/bin/riscv32-unknown-elf-g++
+CCX_RISCV32 = /opt/riscv/bin/riscv32-unknown-elf-gcc
 CC_RISCV32 = /opt/riscv/lib/gcc/riscv32-unknown-elf/7.1.1/plugin/include
 
 # Flags for the C++ compiler: C++11 and all the warnings
@@ -12,7 +12,7 @@ CXXFLAGS += -Wno-literal-suffix
 
 # Determine the plugin-dir and add it to the flags
 PLUGINDIR=$(shell $(CXX) -print-file-name=plugin)
-CXXFLAGS += -I$(CC_RISCV32)
+CXXFLAGS += -O -g -I$(CC_RISCV32)
 
 LDFLAGS = -std=c++11
 
@@ -29,6 +29,6 @@ clean:
 	rm -f gcc_plugin.o gcc_plugin.so test
 
 check: gcc_plugin.so test.cc
-	$(CCX_RISCV32) -fplugin=./gcc_plugin.so -c test.cc -o test
+	$(CCX_RISCV32) -march=rv32imfcxpulpv2 -mfdiv -D__riscv__ -O -fplugin=./gcc_plugin.so -c test.cc -o test
  
 .PHONY: all clean check

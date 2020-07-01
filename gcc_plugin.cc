@@ -135,6 +135,32 @@ struct my_first_pass : gimple_opt_pass
     return insn;
   }
 
+  /**
+  * Method to easily create a CONST_INT rtx
+  */
+  rtx createConstInt(int number){
+    rtx constInt = rtx_alloc(CONST_INT);
+    XWINT(constInt,0) = number;
+    return constInt;
+  }
+
+  /**
+  * Emits: ADD reg,#number
+  */
+  rtx_insn* emitAddRegInt(unsigned int regNumber, int number, rtx_insn* attachRtx, basic_block bb, bool after){
+    rtx reg = gen_rtx_REG(SImode, regNumber);
+    rtx constInt = createConstInt(number);
+    rtx add = gen_rtx_PLUS(SImode, reg, constInt);
+    rtx set = gen_movsi(reg, add);
+    rtx_insn* insn = emitInsn(set, attachRtx, bb, after);
+    return insn;
+  }
+
+  bool isCall(rtx_insn* expr){
+    rtx innerExpr = XEXP(expr, 3);
+    return findCode(innerExpr, CALL);
+  }
+
   virtual unsigned int execute(function * fun) override
   {    
 	  char* funName = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
@@ -163,10 +189,24 @@ struct my_first_pass : gimple_opt_pass
 
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
-          if (CALL_P (insn)) {
-            emitAsmInput("cfibr 0x123", NEXT_INSN(insn), bb, false);
-            emitAsmInput("cfiprc 0x123", insn, bb, false);
-            printf("   Generating CFIBR and CFIPRC (around JALR)\n");
+
+          if (CALL_P (insn) && isCall(insn)) {
+            printf("   Generating CFIPRC (before JALR)\n");
+            emitAsmInput("cfiprc 0x234", insn, bb, false);
+            printf("   Generating CFIBR (after JALR)\n");
+
+            // Generating ASM with after=true does not work yet, add does 
+            // Also, -d (generate debug dump) causes a crash)
+            emitAddRegInt(0, 0, insn, bb, true);
+            //emitAsmInput("cfibr 0x234", insn, bb, true);
+
+            /*
+            printf("\nNEW: %ld \n", (insn));
+            printf("PREV: %ld \n", ( PREV_INSN(insn)));
+            printf("NEXT: %ld \n", ( NEXT_INSN(insn)));
+            */
+
+            //debug_rtx(insn);
           }
         }
 
