@@ -174,7 +174,13 @@ struct my_first_pass : gimple_opt_pass
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
 
+          //printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
+
           if (CALL_P (insn) && isCall(insn)) {
+            // Function calls have RTX_CLASS = RTX_INSN
+            //printf("    RTX_CLASS: %d\n", GET_RTX_CLASS((rtx_code) insn->code));
+            //printf("    RTX_INSN == %d\n", RTX_INSN);
+
             printf("   Generating SETPC (before JALR)\n");
             emitAsmInput("SETPC", insn, bb, false);
           }
