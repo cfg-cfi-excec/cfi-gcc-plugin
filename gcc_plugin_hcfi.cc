@@ -10,6 +10,7 @@
 #include <rtl.h>
 #include <tree-pass.h>
 #include <tree.h>
+#include <print-tree.h>
 
 
 // We must assert that this plugin is GPL compatible
@@ -161,32 +162,84 @@ struct my_first_pass : gimple_opt_pass
     return findCode(innerExpr, CALL);
   }
 
+  void printRtxClass(rtx_code code) {
+    if (GET_RTX_CLASS(code) == RTX_OBJ) {
+      printf("    RTX_CLASS: RTX_OBJ\n");
+    } else if (GET_RTX_CLASS(code) == RTX_CONST_OBJ) {
+      printf("    RTX_CLASS: RTX_CONST_OBJ\n");
+    } else if (GET_RTX_CLASS(code) == RTX_INSN) {
+      printf("    RTX_CLASS: RTX_INSN\n");
+    } else if (GET_RTX_CLASS(code) == RTX_EXTRA) {
+      printf("    RTX_CLASS: RTX_EXTRA\n");
+    } else  {
+      printf("    RTX_CLASS: -------- ");
+    }
+
+            
+  }
+
   virtual unsigned int execute(function * fun) override
   {    
 	  char* funName = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
     printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",funName);
 
+    //const_tree test = get_base_address (current_function_decl);
+    //int uid = LABEL_DECL_UID(current_function_decl);
+    //enum tree_code code = TREE_CODE (current_function_decl);
+    //enum tree_code_class tclass = TREE_CODE_CLASS (code);
+    //int isDecl = tclass == tcc_declaration;
+
+    printf("FUNCTION NAME: %s \n", funName);
+    printf ("FUNCTION ADDRESS: %p\n\n\n", current_function_decl);
+
+
+  
+    //debug_tree(current_function_decl);
+
     try{
       basic_block bb;
-    
+
       FOR_EACH_BB_FN(bb, cfun){
           
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
 
           if (CALL_P (insn) && isCall(insn)) {
+            //printf("\n\n\n###########################################\n");
+            debug_rtx(insn);
+            //printf("###########################################\n");
+            
             // Function calls have RTX_CLASS = RTX_INSN
-            //printf("    RTX_CLASS: %d\n", GET_RTX_CLASS((rtx_code) insn->code));
+            printf("    RTX_CLASS: %d\n", GET_RTX_CLASS((rtx_code) insn->code));
+            printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
             //printf("    RTX_INSN == %d\n", RTX_INSN);
 
-            printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
             
-            // First argument of instn is an RTX_EXTRA
-            //rtx subExpr1 = XEXP(insn,1);
-            //printf("    RTX_CLASS: %d\n", GET_RTX_CLASS((rtx_code) subExpr1->code));
-            //printf("    RTX_EXTRA == %d\n", RTX_EXTRA);
+            // Gett the address of the function call
+            rtx subExpr1 = XEXP(insn,1);
+            //printf("    Call-Address: %d\n", XINT (subExpr1, 1));
+            //printf("    Call-Address: %d\n", XINT (subExpr1, 2));
+            //printf("    Call-Address: %d\n", XINT (subExpr1, 3));
 
-            printf("   Generating SETPC (before JALR)\n");
+
+            //printf("###########################################\n");
+            printf("    RTX_FOMAT: %s\n\n\n", GET_RTX_FORMAT((rtx_code) subExpr1->code));
+            //debug_rtx(subExpr1);
+            //printf("###########################################\n");
+            //printRtxClass((rtx_code) subExpr1->code);
+/*
+            // This Extra itself is usually either an RTX_EXTRA or an INSN
+            rtx addr = XEXP(subExpr1,1);
+            printf("###########################################\n");
+            printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) addr->code));
+            debug_rtx(addr);
+            printf("###########################################\n");
+            printRtxClass((rtx_code) addr->code);
+            printf("    Call-Address: %lu\n", XINT (subExpr1, 1));
+            printf("    Call-Address: %lu\n", XINT (addr, 1));
+            printf("    Call-Arguments: %d\n", XINT (addr, 2));*/
+
+            //printf("   Generating SETPC (before JALR)\n");
             emitAsmInput("SETPC", insn, bb, false);
           }
         }
@@ -194,7 +247,7 @@ struct my_first_pass : gimple_opt_pass
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
           emitAsmInput("CHECKPC", lastInsn, bb, false);
-          printf ("   Generating CHECKPC (last in BB) \n");
+          //printf ("   Generating CHECKPC (last in BB) \n");
         } 
       }
 
