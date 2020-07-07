@@ -168,57 +168,23 @@ struct my_first_pass : gimple_opt_pass
 
     try{
       basic_block bb;
-      
-      bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
-      rtx_insn* firstInsn = firstRealINSN(bb);
-      emitAsmInput("cfichk 0x42", firstInsn, bb, false);
-      printf ("   Generating CFICHK (first BB) \n");
-
+    
       FOR_EACH_BB_FN(bb, cfun){
           
-        // First in BB
-        // rtx_insn* firstInsn = firstRealINSN(bb);
-        // emitAsmInput("cfi_call", firstInsn, bb, false);
-
-        // Last in BB
-        // rtx_insn* lastInsn = lastRealINSN(bb);
-        // emitAsmInput("cfi_ret", lastInsn, bb, false);
-
-        //unsigned int idBB = (bb->index);
-        //printf("INDEX of BB: %d (last is %d) \n", idBB, last_basic_block_for_fn(cfun));
-
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
 
           if (CALL_P (insn) && isCall(insn)) {
-            printf("   Generating CFIPRC (before JALR)\n");
-            emitAsmInput("cfiprc 0x234", insn, bb, false);
-
-            // Generating ASM with after=true does not work yet, add does 
-            // Also, -d (generate debug dump) causes a crash)
-            //printf("   Generating CFIBR (after JALR)\n");
-            //emitAddRegInt(0, 0, insn, bb, true);
-            //emitAsmInput("nop", insn, bb, true);
-
-            /*
-            printf("\nNEW: %ld \n", (insn));
-            printf("PREV: %ld \n", ( PREV_INSN(insn)));
-            printf("NEXT: %ld \n", ( NEXT_INSN(insn)));
-            */
-
-            //debug_rtx(insn);
+            printf("   Generating SETPC (before JALR)\n");
+            emitAsmInput("SETPC", insn, bb, false);
           }
         }
 
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          emitAsmInput("cfiret", lastInsn, bb, false);
-          printf ("   Generating CFIRET (last BB) \n");
+          emitAsmInput("CHECKPC", lastInsn, bb, false);
+          printf ("   Generating CHECKPC (last in BB) \n");
         } 
-
-        //printf ("   ENTRY_BLOCK_PTR_FOR_FN %ld \n", ENTRY_BLOCK_PTR_FOR_FN(cfun));
-        //printf ("   EXIT_BLOCK_PTR_FOR_FN %ld \n", EXIT_BLOCK_PTR_FOR_FN(cfun));
-        //printf ("   BB %ld \n", bb);
       }
 
       printf("\x1b[92m--------------------- Plugin fully ran -----------------------\n\x1b[0m");

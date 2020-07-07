@@ -16,19 +16,21 @@ CXXFLAGS += -O -g -I$(CC_RISCV32)
 
 LDFLAGS = -std=c++11
 
-# top level goal: build our plugin as a shared library
-all: gcc_plugin.so
+PLUGIN_NAME = gcc_plugin_hcfi
 
-gcc_plugin.so: gcc_plugin.o
+# top level goal: build our plugin as a shared library
+all: $(PLUGIN_NAME).so
+
+$(PLUGIN_NAME).so: $(PLUGIN_NAME).o
 	$(CXX) $(LDFLAGS) -shared -o $@ $<
 
-gcc_plugin.o : gcc_plugin.cc 
+$(PLUGIN_NAME).o : $(PLUGIN_NAME).cc 
 	$(CXX) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f gcc_plugin.o gcc_plugin.so test
+	rm -f $(PLUGIN_NAME).o $(PLUGIN_NAME).so test
 
-check: gcc_plugin.so test.cc
-	$(CCX_RISCV32) -march=rv32imfcxpulpv2 -mfdiv -D__riscv__ -O -fplugin=./gcc_plugin.so -c test.cc -o test
+check: $(PLUGIN_NAME).so test.cc
+	$(CCX_RISCV32) -march=rv32imfcxpulpv2 -mfdiv -D__riscv__ -O -fplugin=./$(PLUGIN_NAME).so -c test.cc -o test
  
 .PHONY: all clean check
