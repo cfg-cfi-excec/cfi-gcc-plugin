@@ -205,6 +205,8 @@ struct my_first_pass : gimple_opt_pass
         FOR_BB_INSNS (bb, insn) {
 
           if (CALL_P (insn) && isCall(insn)) {
+            bool isDirectCall = true;
+
             //printf("\n\n\n###########################################\n");
             //debug_rtx(insn);
             //printf("###########################################\n");
@@ -252,13 +254,20 @@ struct my_first_pass : gimple_opt_pass
               
               func = SYMBOL_REF_DECL(subExpr6);
               //debug_rtx(subExpr6);
+            } else  if (((rtx_code)subExpr->code) == REG) {
+              //printf("RTX REG (%d)\n", ((rtx_code)subExpr->code));
+              isDirectCall = false;
             } else {
-              printf("RTX other\n");
+              //debug_rtx(body);
+              //debug_rtx(subExpr);
+              printf("RTX other (%d)\n", ((rtx_code)subExpr->code));
             }
 
             if (func != 0) {
               const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
-              printf("    CALLING FUNCTION <%s> with address %p\n", fName, func);
+              printf("    CALLING FUNCTION <%s> DIRECTLY with address %p\n", fName, func);
+            } else if (!isDirectCall) {
+              printf("    CALLING FUNCTION INDIRECTLY \n");
             }
 
             //printf("   Generating SETPC (before JALR)\n");
