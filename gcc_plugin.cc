@@ -161,6 +161,20 @@ struct my_first_pass : gimple_opt_pass
     return findCode(innerExpr, CALL);
   }
 
+  void printRtxClass(rtx_code code) {
+    if (GET_RTX_CLASS(code) == RTX_OBJ) {
+      printf("    RTX_CLASS: RTX_OBJ\n");
+    } else if (GET_RTX_CLASS(code) == RTX_CONST_OBJ) {
+      printf("    RTX_CLASS: RTX_CONST_OBJ\n");
+    } else if (GET_RTX_CLASS(code) == RTX_INSN) {
+      printf("    RTX_CLASS: RTX_INSN\n");
+    } else if (GET_RTX_CLASS(code) == RTX_EXTRA) {
+      printf("    RTX_CLASS: RTX_EXTRA\n");
+    } else  {
+      printf("    RTX_CLASS: -------- ");
+    }     
+  }
+
   virtual unsigned int execute(function * fun) override
   {    
 	  char* funName = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );

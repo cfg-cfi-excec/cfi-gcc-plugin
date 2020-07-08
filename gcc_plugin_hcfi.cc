@@ -145,18 +145,6 @@ struct my_first_pass : gimple_opt_pass
     return constInt;
   }
 
-  /**
-  * Emits: ADD reg,#number
-  */
-  rtx_insn* emitAddRegInt(unsigned int regNumber, int number, rtx_insn* attachRtx, basic_block bb, bool after){
-    rtx reg = gen_rtx_REG(SImode, regNumber);
-    rtx constInt = createConstInt(number);
-    rtx add = gen_rtx_PLUS(SImode, reg, constInt);
-    rtx set = gen_movsi(reg, add);
-    rtx_insn* insn = emitInsn(set, attachRtx, bb, after);
-    return insn;
-  }
-
   bool isCall(rtx_insn* expr){
     rtx innerExpr = XEXP(expr, 3);
     return findCode(innerExpr, CALL);
@@ -173,9 +161,7 @@ struct my_first_pass : gimple_opt_pass
       printf("    RTX_CLASS: RTX_EXTRA\n");
     } else  {
       printf("    RTX_CLASS: -------- ");
-    }
-
-            
+    }     
   }
 
   void instrumentFunctionEntry(const tree_node *tree, char *fName, basic_block firstBlock, rtx_insn *firstInsn) {
@@ -198,6 +184,17 @@ struct my_first_pass : gimple_opt_pass
     //TODO: Set Label propperly
     emitAsmInput("SETPCLABEL 0x42", insn, block, false);
     printf ("    Generating SETPCLABEL \n");
+  }
+
+  void instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    //TODO: Set Label propperly
+    emitAsmInput("SJCFI 0x42", insn, block, false);
+    printf ("    Generating SJCFI \n");
+  }
+
+  void instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    emitAsmInput("LJCFI", insn, block, false);
+    printf ("    Generating LJCFI \n");
   }
 
   virtual unsigned int execute(function * fun) override
@@ -259,10 +256,19 @@ struct my_first_pass : gimple_opt_pass
             }
 
             if (func != 0) {
-              instrumentDirectFunctionCall(funTree, funName, bb, insn);
-
               const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
-              printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
+
+              //TODO: Is this a sufficient check for setjmp/longjmp?
+              if (strcmp(fName, "setjmp") == 0) {
+                instrumentSetJumpFunctionCall(funTree, funName, bb, insn);
+                printf("      setjmp \n");
+              } else if (strcmp(fName, "longjmp") == 0) {
+                instrumentLongJumpFunctionCall(funTree, funName, bb, insn);
+                printf("      longjmp \n");
+              } else {
+                instrumentDirectFunctionCall(funTree, funName, bb, insn);
+                printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
+              }
             } else if (!isDirectCall) {
               instrumentIndirectFunctionCall(funTree, funName, bb, insn);
 
