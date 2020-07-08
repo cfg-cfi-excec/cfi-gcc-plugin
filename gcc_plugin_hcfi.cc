@@ -206,38 +206,65 @@ struct my_first_pass : gimple_opt_pass
 
           if (CALL_P (insn) && isCall(insn)) {
             //printf("\n\n\n###########################################\n");
-            debug_rtx(insn);
+            //debug_rtx(insn);
             //printf("###########################################\n");
             
             // Function calls have RTX_CLASS = RTX_INSN
-            printf("    RTX_CLASS: %d\n", GET_RTX_CLASS((rtx_code) insn->code));
-            printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
+            //printf ("UID %d", INSN_UID (insn));
+            //printRtxClass((rtx_code) insn->code);
+            //printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
             //printf("    RTX_INSN == %d\n", RTX_INSN);
 
             
             // Gett the address of the function call
-            rtx subExpr1 = XEXP(insn,1);
-            //printf("    Call-Address: %d\n", XINT (subExpr1, 1));
-            //printf("    Call-Address: %d\n", XINT (subExpr1, 2));
-            //printf("    Call-Address: %d\n", XINT (subExpr1, 3));
+            rtx body = PATTERN(insn);
+            rtx subExpr1 = XVECEXP(body, 0, 0);
+            rtx subExpr2 = XEXP(subExpr1, 1);
+            rtx subExpr3 = XEXP(subExpr2, 0);
+            rtx subExpr4 = XEXP(subExpr3, 0);
 
+            /*
+            printf("###########################################\n");
+            debug_rtx(body);
+            printRtxClass((rtx_code) body->code);
+            printf("###########################################\n");
+            debug_rtx(subExpr1);
+            printRtxClass((rtx_code) subExpr1->code);
+            printf("###########################################\n");
+            debug_rtx(subExpr2);
+            printRtxClass((rtx_code) subExpr2->code);
+            printf("###########################################\n");
+            debug_rtx(subExpr3);
+            printRtxClass((rtx_code) subExpr3->code);
+            printf("###########################################\n");
+            debug_rtx(subExpr4);
+            printRtxClass((rtx_code) subExpr4->code);
+            */
 
-            //printf("###########################################\n");
-            printf("    RTX_FOMAT: %s\n\n\n", GET_RTX_FORMAT((rtx_code) subExpr1->code));
-            //debug_rtx(subExpr1);
-            //printf("###########################################\n");
-            //printRtxClass((rtx_code) subExpr1->code);
-/*
-            // This Extra itself is usually either an RTX_EXTRA or an INSN
-            rtx addr = XEXP(subExpr1,1);
             printf("###########################################\n");
-            printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) addr->code));
-            debug_rtx(addr);
-            printf("###########################################\n");
-            printRtxClass((rtx_code) addr->code);
-            printf("    Call-Address: %lu\n", XINT (subExpr1, 1));
-            printf("    Call-Address: %lu\n", XINT (addr, 1));
-            printf("    Call-Arguments: %d\n", XINT (addr, 2));*/
+            if (((rtx_code)subExpr4->code) == SYMBOL_REF) {
+              //printf("RTX SYMBOL_REF\n");
+              //printf("RTX NAME: %s\n", GET_RTX_NAME(subExpr4->code));
+
+              tree func = SYMBOL_REF_DECL(subExpr4);
+              //debug_tree(func);
+              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
+              printf("CALLING FUNCTION <%s> with address %p\n", fName, func);
+            } else  if (((rtx_code)subExpr4->code) == CONST) {
+              //printf("RTX CONST\n");
+              //debug_rtx(subExpr4);
+              rtx subExpr5 = XEXP(subExpr4, 0);
+              //debug_rtx(subExpr5);
+              rtx subExpr6 = XEXP(subExpr5, 0);
+              //debug_rtx(subExpr6);
+              
+              tree func = SYMBOL_REF_DECL(subExpr6);
+              //debug_tree(func);
+              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
+              printf("CALLING FUNCTION <%s> with address %p\n", fName, func);
+            } else {
+              printf("RTX other\n");
+            }
 
             //printf("   Generating SETPC (before JALR)\n");
             emitAsmInput("SETPC", insn, bb, false);
