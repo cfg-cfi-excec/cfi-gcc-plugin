@@ -178,26 +178,45 @@ struct my_first_pass : gimple_opt_pass
             
   }
 
+  void instrumentFunctionEntry(const tree_node *tree, char *fName, basic_block firstBlock, rtx_insn *firstInsn) {
+    //TODO: Set Label propperly
+    emitAsmInput("CHECKLABEL 0x42", firstInsn, firstBlock, false);
+    printf ("    Generating CHECKLABEL \n");
+  }
+
+  void instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+    emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
+    printf ("    Generating CHECKPC \n");
+  }
+
+  void instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    emitAsmInput("SETPC", insn, block, false);
+    printf ("    Generating SETPC \n");
+  }
+
+  void instrumentIndirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    //TODO: Set Label propperly
+    emitAsmInput("SETPCLABEL 0x42", insn, block, false);
+    printf ("    Generating SETPCLABEL \n");
+  }
+
   virtual unsigned int execute(function * fun) override
   {    
+    const_tree funTree = get_base_address(current_function_decl);
 	  char* funName = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
     printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",funName);
-
-    //const_tree test = get_base_address (current_function_decl);
-    //int uid = LABEL_DECL_UID(current_function_decl);
-    //enum tree_code code = TREE_CODE (current_function_decl);
-    //enum tree_code_class tclass = TREE_CODE_CLASS (code);
-    //int isDecl = tclass == tcc_declaration;
 
     printf("FUNCTION NAME: %s \n", funName);
     printf ("FUNCTION ADDRESS: %p\n", current_function_decl);
 
-
-  
     //debug_tree(current_function_decl);
 
     try{
       basic_block bb;
+
+      bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
+      rtx_insn* firstInsn = firstRealINSN(bb);
+      instrumentFunctionEntry(funTree, funName, bb, firstInsn);
 
       FOR_EACH_BB_FN(bb, cfun){
           
@@ -206,17 +225,6 @@ struct my_first_pass : gimple_opt_pass
 
           if (CALL_P (insn) && isCall(insn)) {
             bool isDirectCall = true;
-
-            //printf("\n\n\n###########################################\n");
-            //debug_rtx(insn);
-            //printf("###########################################\n");
-            
-            // Function calls have RTX_CLASS = RTX_INSN
-            //printf ("UID %d", INSN_UID (insn));
-            //printRtxClass((rtx_code) insn->code);
-            //printf("    RTX_FOMAT: %s\n", GET_RTX_FORMAT((rtx_code) insn->code));
-            //printf("    RTX_INSN == %d\n", RTX_INSN);
-
             
             // Get the body of the function call
             rtx body = PATTERN(insn);
@@ -239,46 +247,33 @@ struct my_first_pass : gimple_opt_pass
             tree func = 0;
 
             if (((rtx_code)subExpr->code) == SYMBOL_REF) {
-              //printf("RTX SYMBOL_REF\n");
-              //printf("RTX NAME: %s\n", GET_RTX_NAME(subExpr->code));
-
               func = SYMBOL_REF_DECL(subExpr);
-              //debug_rtx(subExpr);
             } else  if (((rtx_code)subExpr->code) == CONST) {
-              //printf("RTX CONST\n");
-              //debug_rtx(subExpr);
-              rtx subExpr5 = XEXP(subExpr, 0);
-              //debug_rtx(subExpr5);
-              rtx subExpr6 = XEXP(subExpr5, 0);
-              //debug_rtx(subExpr6);
-              
-              func = SYMBOL_REF_DECL(subExpr6);
-              //debug_rtx(subExpr6);
+              rtx tmp = XEXP(subExpr, 0);
+              tmp = XEXP(tmp, 0);
+              func = SYMBOL_REF_DECL(tmp);
             } else  if (((rtx_code)subExpr->code) == REG) {
-              //printf("RTX REG (%d)\n", ((rtx_code)subExpr->code));
               isDirectCall = false;
             } else {
-              //debug_rtx(body);
-              //debug_rtx(subExpr);
-              printf("RTX other (%d)\n", ((rtx_code)subExpr->code));
+              printf("ERROR (RTX other - %d)\n", ((rtx_code)subExpr->code));
             }
 
             if (func != 0) {
-              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
-              printf("    CALLING FUNCTION <%s> DIRECTLY with address %p\n", fName, func);
-            } else if (!isDirectCall) {
-              printf("    CALLING FUNCTION INDIRECTLY \n");
-            }
+              instrumentDirectFunctionCall(funTree, funName, bb, insn);
 
-            //printf("   Generating SETPC (before JALR)\n");
-            emitAsmInput("SETPC", insn, bb, false);
+              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
+              printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
+            } else if (!isDirectCall) {
+              instrumentIndirectFunctionCall(funTree, funName, bb, insn);
+
+              printf("      calling function INDIRECTLY \n");
+            }
           }
         }
 
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          emitAsmInput("CHECKPC", lastInsn, bb, false);
-          //printf ("   Generating CHECKPC (last in BB) \n");
+          instrumentFunctionExit(funTree, funName, bb, lastInsn);
         } 
       }
 
