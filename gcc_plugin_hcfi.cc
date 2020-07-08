@@ -190,7 +190,7 @@ struct my_first_pass : gimple_opt_pass
     //int isDecl = tclass == tcc_declaration;
 
     printf("FUNCTION NAME: %s \n", funName);
-    printf ("FUNCTION ADDRESS: %p\n\n\n", current_function_decl);
+    printf ("FUNCTION ADDRESS: %p\n", current_function_decl);
 
 
   
@@ -216,54 +216,49 @@ struct my_first_pass : gimple_opt_pass
             //printf("    RTX_INSN == %d\n", RTX_INSN);
 
             
-            // Gett the address of the function call
+            // Get the body of the function call
             rtx body = PATTERN(insn);
-            rtx subExpr1 = XVECEXP(body, 0, 0);
-            rtx subExpr2 = XEXP(subExpr1, 1);
-            rtx subExpr3 = XEXP(subExpr2, 0);
-            rtx subExpr4 = XEXP(subExpr3, 0);
+            rtx parallel = XVECEXP(body, 0, 0);
+            rtx call;
 
-            /*
-            printf("###########################################\n");
-            debug_rtx(body);
-            printRtxClass((rtx_code) body->code);
-            printf("###########################################\n");
-            debug_rtx(subExpr1);
-            printRtxClass((rtx_code) subExpr1->code);
-            printf("###########################################\n");
-            debug_rtx(subExpr2);
-            printRtxClass((rtx_code) subExpr2->code);
-            printf("###########################################\n");
-            debug_rtx(subExpr3);
-            printRtxClass((rtx_code) subExpr3->code);
-            printf("###########################################\n");
-            debug_rtx(subExpr4);
-            printRtxClass((rtx_code) subExpr4->code);
-            */
+            // Check whether the function returns a value or not:
+            // - If it returns a value, the first element of the body is a SET
+            // - Otherwiese it is of type CALL directly
+            if (GET_CODE (parallel) == SET) {
+              call = XEXP(parallel, 1);
+            } else if (GET_CODE (parallel) == CALL) {
+              call = parallel;
+            } else {
+              printf("ERROR \n");
+            }
+            
+            rtx mem = XEXP(call, 0);
+            rtx subExpr = XEXP(mem, 0);
+            tree func = 0;
 
-            printf("###########################################\n");
-            if (((rtx_code)subExpr4->code) == SYMBOL_REF) {
+            if (((rtx_code)subExpr->code) == SYMBOL_REF) {
               //printf("RTX SYMBOL_REF\n");
-              //printf("RTX NAME: %s\n", GET_RTX_NAME(subExpr4->code));
+              //printf("RTX NAME: %s\n", GET_RTX_NAME(subExpr->code));
 
-              tree func = SYMBOL_REF_DECL(subExpr4);
-              //debug_tree(func);
-              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
-              printf("CALLING FUNCTION <%s> with address %p\n", fName, func);
-            } else  if (((rtx_code)subExpr4->code) == CONST) {
+              func = SYMBOL_REF_DECL(subExpr);
+              //debug_rtx(subExpr);
+            } else  if (((rtx_code)subExpr->code) == CONST) {
               //printf("RTX CONST\n");
-              //debug_rtx(subExpr4);
-              rtx subExpr5 = XEXP(subExpr4, 0);
+              //debug_rtx(subExpr);
+              rtx subExpr5 = XEXP(subExpr, 0);
               //debug_rtx(subExpr5);
               rtx subExpr6 = XEXP(subExpr5, 0);
               //debug_rtx(subExpr6);
               
-              tree func = SYMBOL_REF_DECL(subExpr6);
-              //debug_tree(func);
-              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
-              printf("CALLING FUNCTION <%s> with address %p\n", fName, func);
+              func = SYMBOL_REF_DECL(subExpr6);
+              //debug_rtx(subExpr6);
             } else {
               printf("RTX other\n");
+            }
+
+            if (func != 0) {
+              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
+              printf("    CALLING FUNCTION <%s> with address %p\n", fName, func);
             }
 
             //printf("   Generating SETPC (before JALR)\n");
