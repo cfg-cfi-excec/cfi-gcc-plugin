@@ -149,6 +149,17 @@ struct my_first_pass : gimple_opt_pass
     rtx innerExpr = XEXP(expr, 3);
     return findCode(innerExpr, CALL);
   }
+  
+  /**
+  * Method to determine whether or not the provided
+  * rtx_insn is a return instruction
+  */
+  bool isReturn(rtx_insn* expr){
+    rtx innerExpr = XEXP(expr, 3);
+    bool ret =  findCode(innerExpr, RETURN);
+    bool simpRet = findCode(innerExpr, SIMPLE_RETURN);
+    return (ret || simpRet);
+  }
 
   void printRtxClass(rtx_code code) {
     if (GET_RTX_CLASS(code) == RTX_OBJ) {
@@ -167,34 +178,38 @@ struct my_first_pass : gimple_opt_pass
   void instrumentFunctionEntry(const tree_node *tree, char *fName, basic_block firstBlock, rtx_insn *firstInsn) {
     //TODO: Set Label propperly
     emitAsmInput("CHECKLABEL 0x42", firstInsn, firstBlock, false);
-    printf ("    Generating CHECKLABEL \n");
+    //printf ("    Generating CHECKLABEL \n");
+  }
+
+  void instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+    emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
+    //printf ("    Generating CHECKPC \n");
   }
 
   void instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-    emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
-    printf ("    Generating CHECKPC \n");
+
   }
 
   void instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     emitAsmInput("SETPC", insn, block, false);
-    printf ("    Generating SETPC \n");
+    //printf ("    Generating SETPC \n");
   }
 
   void instrumentIndirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     //TODO: Set Label propperly
     emitAsmInput("SETPCLABEL 0x42", insn, block, false);
-    printf ("    Generating SETPCLABEL \n");
+    //printf ("    Generating SETPCLABEL \n");
   }
 
   void instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     //TODO: Set Label propperly
     emitAsmInput("SJCFI 0x42", insn, block, false);
-    printf ("    Generating SJCFI \n");
+    //printf ("    Generating SJCFI \n");
   }
 
   void instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     emitAsmInput("LJCFI", insn, block, false);
-    printf ("    Generating LJCFI \n");
+    //printf ("    Generating LJCFI \n");
   }
 
   virtual unsigned int execute(function * fun) override
@@ -204,22 +219,24 @@ struct my_first_pass : gimple_opt_pass
     printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",funName);
 
     printf("FUNCTION NAME: %s \n", funName);
-    printf ("FUNCTION ADDRESS: %p\n", current_function_decl);
+    printf("FUNCTION ADDRESS: %p\n", current_function_decl);
 
     //debug_tree(current_function_decl);
 
     try{
       basic_block bb;
 
-      bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
-      rtx_insn* firstInsn = firstRealINSN(bb);
-      instrumentFunctionEntry(funTree, funName, bb, firstInsn);
+      // Don't instrument function entry of MAIN
+      if (strcmp(funName, "main") != 0) {
+        bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
+        rtx_insn* firstInsn = firstRealINSN(bb);
+        instrumentFunctionEntry(funTree, funName, bb, firstInsn);
+      }
 
       FOR_EACH_BB_FN(bb, cfun){
           
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
-
           if (CALL_P (insn) && isCall(insn)) {
             bool isDirectCall = true;
             
@@ -265,22 +282,36 @@ struct my_first_pass : gimple_opt_pass
               } else if (strcmp(fName, "longjmp") == 0) {
                 instrumentLongJumpFunctionCall(funTree, funName, bb, insn);
                 printf("      longjmp \n");
+              } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0) {
+                // do nothing
               } else {
                 instrumentDirectFunctionCall(funTree, funName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
               }
             } else if (!isDirectCall) {
               instrumentIndirectFunctionCall(funTree, funName, bb, insn);
-
               printf("      calling function INDIRECTLY \n");
+            }
+          } else if (JUMP_P(insn) && strcmp(funName, "main") != 0) {
+            // Don't instrument function return of main
+            rtx ret = XEXP(insn, 0);
+            ret = PATTERN(insn);
+            if (GET_CODE (ret) == PARALLEL) {
+              ret = XVECEXP(ret, 0, 0);
+              if (ANY_RETURN_P(ret)) {
+              instrumentFunctionReturn(funTree, funName, bb, insn);
+              }
+            } else if (ANY_RETURN_P(ret)) {
+              instrumentFunctionReturn(funTree, funName, bb, insn);
             }
           }
         }
 
+/*
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
           instrumentFunctionExit(funTree, funName, bb, lastInsn);
-        } 
+        } */
       }
 
       printf("\x1b[92m--------------------- Plugin fully ran -----------------------\n\x1b[0m");
