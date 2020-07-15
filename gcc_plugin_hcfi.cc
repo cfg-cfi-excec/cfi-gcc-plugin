@@ -253,22 +253,14 @@ struct my_first_pass : gimple_opt_pass
   }
 
   rtx_insn* instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    //char buff[14];
-    //snprintf(buff, sizeof(buff), "CHECKLABEL %d", 12);
+    int label = get_label_for_existing_function(function_name, file_name);
+    std::string tmp = "CHECKLABEL " + std::to_string(label);  
 
-    char buff[14] = "CHECKLABEL 12";  // does NOT work
-    const char *buff1 = "CHECKLABEL 12";    // works
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
 
-    std::string tmp = "CHECKLABEL 34";  
-    const char *buff2 = tmp.c_str();  // does NOT work
-    const char *buff3 = &tmp[0];      // does NOT work
-    char *buff4 = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff4);
-    buff4[tmp.size()] = '\0';
-
-    printf("COMMAND: --%s-- \n", buff4);
-
-    return emitAsmInput(buff4, firstInsn, firstBlock, false);
+    return emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
   void instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -286,9 +278,14 @@ struct my_first_pass : gimple_opt_pass
   }
 
   rtx_insn* instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    int label = 12;//get_label_for_function_call(function_name, file_name, line_number);
-    
-    return emitAsmInput("SETPCLABEL 0x12", insn, block, false);
+    int label = get_label_for_function_call(function_name, file_name, line_number);
+    std::string tmp = "SETPCLABEL " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    return emitAsmInput(buff, insn, block, false);
   }
 
   void instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -320,8 +317,7 @@ struct my_first_pass : gimple_opt_pass
       if (strcmp(function_name, "main") != 0) {
         bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
         rtx_insn* firstInsn = firstRealINSN(bb);
-        rtx_insn *tmp = instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
-        debug_rtx(tmp);
+        instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
       }
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -382,9 +378,7 @@ struct my_first_pass : gimple_opt_pass
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
               }
             } else if (!isDirectCall) {
-              rtx_insn * tmp = instrumentIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
-              
-              debug_rtx(tmp);
+              instrumentIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               printf("      calling function INDIRECTLY \n");
             }
           } else if (JUMP_P(insn) && strcmp(function_name, "main") != 0) {
