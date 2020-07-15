@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 
 // This is the first gcc header to be included
 #include "gcc-plugin.h"
@@ -332,6 +333,118 @@ struct my_first_pass : gimple_opt_pass
 };
 }
 
+void read_cfg_file() {
+  //TODO: set relative path
+  std::ifstream input( "/home/mario/Desktop/examples/simple/cfg.txt" );
+
+  std::string allowed_calls_title = "# allowed calls";
+  std::string calls_title = "# calls";
+
+  bool section_allowed_calls = false;
+  bool section_calls = false;
+
+  size_t pos = 0;
+  std::string token, token_name, token_file, file_name, function_name, line_number;
+  std::string delimiter = " ";
+  std::string delimiter_entry = ":";
+
+  for(std::string line; getline( input, line ); ) {
+    pos = 0;
+    std::cout << "LINE READ: " << line << std::endl;
+
+    if (line.find(allowed_calls_title) != std::string::npos) {
+      section_allowed_calls = true;
+      section_calls = false;
+    } else if (line.find(calls_title) != std::string::npos) {
+      section_allowed_calls = false;
+      section_calls = true;
+    } else if (line.length() > 0) {
+      if (section_allowed_calls) {
+        // extract file name
+        pos = line.find(delimiter);
+        file_name = line.substr(0, pos);
+        line.erase(0, pos + delimiter.length());
+
+        // extract function name
+        pos = line.find(delimiter);
+        function_name = line.substr(0, pos);
+        line.erase(0, pos + delimiter.length());
+
+        // extract line_number
+        pos = line.find(delimiter);
+        line_number = line.substr(0, pos-1);
+        line.erase(0, pos + delimiter.length());
+
+        std::cout << "    ENTRY FOUND: " << file_name << " -- " << function_name << ": " << line_number << std::endl;
+
+        // extract allowed callers of this function
+        while ((pos = line.find(delimiter)) != std::string::npos) {
+            token = line.substr(0, pos);
+            line.erase(0, pos + delimiter.length());
+
+            pos = token.find(delimiter_entry);
+            token_file = token.substr(0, pos);
+            token.erase(0, pos + delimiter_entry.length());
+            token_name = token;
+
+            std::cout << "        allowed: " << token_file << " :: " << token_name << std::endl;
+        }
+
+        if (line.length() > 0) {
+            pos = line.find(delimiter_entry);
+            token_file = line.substr(0, pos);
+            line.erase(0, pos + delimiter_entry.length());
+            token_name = line;
+
+            std::cout << "        allowed: " << token_file << " :: " << token_name << std::endl;
+        }
+
+
+      } else if (section_calls) {
+        std::cout << "    parsing call.." << std::endl;
+
+        // extract file name
+        pos = line.find(delimiter);
+        file_name = line.substr(0, pos);
+        line.erase(0, pos + delimiter.length());
+
+        // extract function name
+        pos = line.find(delimiter);
+        function_name = line.substr(0, pos);
+        line.erase(0, pos + delimiter.length());
+
+        // extract line_number
+        pos = line.find(delimiter);
+        line_number = line.substr(0, pos-1);
+        line.erase(0, pos + delimiter.length());
+
+        std::cout << "    ENTRY FOUND: " << file_name << " -- " << function_name << ": " << line_number << std::endl;
+        
+        // extract possible function calls
+        while ((pos = line.find(delimiter)) != std::string::npos) {
+            token = line.substr(0, pos);
+            line.erase(0, pos + delimiter.length());
+
+            pos = token.find(delimiter_entry);
+            token_file = token.substr(0, pos);
+            token.erase(0, pos + delimiter_entry.length());
+            token_name = token;
+
+            std::cout << "        calls: " << token_file << " :: " << token_name << std::endl;
+        }
+
+        if (line.length() > 0) {
+            pos = line.find(delimiter_entry);
+            token_file = line.substr(0, pos);
+            line.erase(0, pos + delimiter_entry.length());
+            token_name = line;
+
+            std::cout << "        calls: " << token_file << " :: " << token_name << std::endl;
+        }
+      }
+    }
+  }
+}
 
 int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version)
@@ -348,6 +461,8 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     /* callback */ NULL,
                     /* user_data */
                     &my_gcc_plugin_info);
+
+  //read_cfg_file();
 
   // Register the phase right after cfg
   struct register_pass_info pass_info;
