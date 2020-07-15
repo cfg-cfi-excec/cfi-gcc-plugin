@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
+#include <vector>
 
 // This is the first gcc header to be included
 #include "gcc-plugin.h"
@@ -333,6 +334,45 @@ struct my_first_pass : gimple_opt_pass
 };
 }
 
+struct CFG_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+};
+
+struct CFG_EXISTING_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+    std::vector<CFG_FUNCTION> called_by;
+};
+
+struct CFG_FUNCTION_CALL {
+    std::string file_name;
+    std::string function_name;
+    int line_number;
+    std::vector<CFG_FUNCTION> calls;
+};
+
+std::vector<CFG_EXISTING_FUNCTION> existing_functions;
+std::vector<CFG_FUNCTION_CALL> function_calls;
+
+void print_existing_functions() {
+  for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
+    std::cout << "FUNCTION: " << existing_function.function_name << " (" << existing_function.file_name << ")" << '\n';
+    for(CFG_FUNCTION called_by : existing_function.called_by) {
+      std::cout << "    called by: " << called_by.function_name << " (" << called_by.file_name << ")" << '\n';
+    }
+  }
+}
+
+void print_function_call() {
+  for(CFG_FUNCTION_CALL function_call : function_calls) {
+    std::cout << "FUNCTION: " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
+    for(CFG_FUNCTION calls : function_call.calls) {
+      std::cout << "    calls: " << calls.function_name << " (" << calls.file_name << ")" << '\n';
+    }
+  }
+}
+
 void read_cfg_file() {
   //TODO: set relative path
   std::ifstream input( "/home/mario/Desktop/examples/simple/cfg.txt" );
@@ -350,7 +390,7 @@ void read_cfg_file() {
 
   for(std::string line; getline( input, line ); ) {
     pos = 0;
-    std::cout << "LINE READ: " << line << std::endl;
+    //std::cout << "LINE READ: " << line << std::endl;
 
     if (line.find(allowed_calls_title) != std::string::npos) {
       section_allowed_calls = true;
@@ -370,12 +410,9 @@ void read_cfg_file() {
         function_name = line.substr(0, pos);
         line.erase(0, pos + delimiter.length());
 
-        // extract line_number
-        pos = line.find(delimiter);
-        line_number = line.substr(0, pos-1);
-        line.erase(0, pos + delimiter.length());
-
-        std::cout << "    ENTRY FOUND: " << file_name << " -- " << function_name << ": " << line_number << std::endl;
+        CFG_EXISTING_FUNCTION cfg_function;
+        cfg_function.file_name = file_name;
+        cfg_function.function_name = function_name;
 
         // extract allowed callers of this function
         while ((pos = line.find(delimiter)) != std::string::npos) {
@@ -387,7 +424,10 @@ void read_cfg_file() {
             token.erase(0, pos + delimiter_entry.length());
             token_name = token;
 
-            std::cout << "        allowed: " << token_file << " :: " << token_name << std::endl;
+            CFG_FUNCTION tmp;
+            tmp.file_name = token_file;
+            tmp.function_name = token_name;
+            cfg_function.called_by.push_back(tmp);
         }
 
         if (line.length() > 0) {
@@ -396,12 +436,15 @@ void read_cfg_file() {
             line.erase(0, pos + delimiter_entry.length());
             token_name = line;
 
-            std::cout << "        allowed: " << token_file << " :: " << token_name << std::endl;
+            CFG_FUNCTION tmp;
+            tmp.file_name = token_file;
+            tmp.function_name = token_name;
+            cfg_function.called_by.push_back(tmp);
         }
 
+        existing_functions.push_back(cfg_function);
 
       } else if (section_calls) {
-        std::cout << "    parsing call.." << std::endl;
 
         // extract file name
         pos = line.find(delimiter);
@@ -418,7 +461,10 @@ void read_cfg_file() {
         line_number = line.substr(0, pos-1);
         line.erase(0, pos + delimiter.length());
 
-        std::cout << "    ENTRY FOUND: " << file_name << " -- " << function_name << ": " << line_number << std::endl;
+        CFG_FUNCTION_CALL cfg_function;
+        cfg_function.file_name = file_name;
+        cfg_function.function_name = function_name;
+        cfg_function.line_number = std::stoi(line_number);
         
         // extract possible function calls
         while ((pos = line.find(delimiter)) != std::string::npos) {
@@ -430,7 +476,10 @@ void read_cfg_file() {
             token.erase(0, pos + delimiter_entry.length());
             token_name = token;
 
-            std::cout << "        calls: " << token_file << " :: " << token_name << std::endl;
+            CFG_FUNCTION tmp;
+            tmp.file_name = token_file;
+            tmp.function_name = token_name;
+            cfg_function.calls.push_back(tmp);
         }
 
         if (line.length() > 0) {
@@ -439,8 +488,13 @@ void read_cfg_file() {
             line.erase(0, pos + delimiter_entry.length());
             token_name = line;
 
-            std::cout << "        calls: " << token_file << " :: " << token_name << std::endl;
+            CFG_FUNCTION tmp;
+            tmp.file_name = token_file;
+            tmp.function_name = token_name;
+            cfg_function.calls.push_back(tmp);
         }
+
+        function_calls.push_back(cfg_function);
       }
     }
   }
@@ -463,6 +517,8 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     &my_gcc_plugin_info);
 
   //read_cfg_file();
+  //print_existing_functions();
+  //print_function_call();
 
   // Register the phase right after cfg
   struct register_pass_info pass_info;
