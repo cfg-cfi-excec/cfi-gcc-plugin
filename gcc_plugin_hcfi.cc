@@ -245,6 +245,8 @@ struct my_first_pass : gimple_opt_pass
             rtx parallel = XVECEXP(body, 0, 0);
             rtx call;
 
+            //printf("CALL INSTRUCTION in %s : %d \n", LOCATION_FILE(INSN_LOCATION (insn)), LOCATION_LINE(INSN_LOCATION (insn)));
+
             // Check whether the function returns a value or not:
             // - If it returns a value, the first element of the body is a SET
             // - Otherwiese it is of type CALL directly
