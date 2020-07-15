@@ -29,8 +29,5 @@ $(PLUGIN_NAME).o : $(PLUGIN_NAME).cc
 
 clean:
 	rm -f $(PLUGIN_NAME).o $(PLUGIN_NAME).so test
-
-check: $(PLUGIN_NAME).so test.cc
-	$(CCX_RISCV32) -march=rv32imfcxpulpv2 -mfdiv -D__riscv__ -O -fplugin=./$(PLUGIN_NAME).so -c test.cc -o test
  
 .PHONY: all clean check

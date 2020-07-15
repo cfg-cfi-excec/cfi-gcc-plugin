@@ -15,11 +15,86 @@
 #include <print-tree.h>
 
 
+struct CFG_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+};
+
+struct CFG_EXISTING_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+    std::string cmd_check_label;
+    int label;
+    std::vector<CFG_FUNCTION> called_by;
+};
+
+struct CFG_FUNCTION_CALL {
+    std::string file_name;
+    std::string function_name;
+    int line_number;
+    std::vector<CFG_FUNCTION> calls;
+};
+
+std::vector<CFG_EXISTING_FUNCTION> existing_functions;
+std::vector<CFG_FUNCTION_CALL> function_calls;
+
+
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
 
 static struct plugin_info my_gcc_plugin_info =
 { "1.0", "This is a very simple plugin" };
+
+
+void print_existing_functions() {
+  for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
+    std::cout << "FUNCTION: " << existing_function.function_name << " (" << existing_function.file_name << ")" << '\n';
+    for(CFG_FUNCTION called_by : existing_function.called_by) {
+      std::cout << "    called by: " << called_by.function_name << " (" << called_by.file_name << ")" << '\n';
+    }
+  }
+}
+
+void print_function_call() {
+  for(CFG_FUNCTION_CALL function_call : function_calls) {
+    std::cout << "FUNCTION: " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
+    for(CFG_FUNCTION calls : function_call.calls) {
+      std::cout << "    calls: " << calls.function_name << " (" << calls.file_name << ")" << '\n';
+    }
+  }
+}
+
+int get_label_for_existing_function(std::string function_name, std::string file_name) {
+  for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
+    if (existing_function.file_name.compare(file_name) == 0) {
+      if (existing_function.function_name.compare(function_name) == 0) {
+        return existing_function.label;
+      }
+    }
+  }
+
+  return -1;
+}
+
+int get_label_for_function_call(std::string function_name, std::string file_name, int line_number) {
+  for(CFG_FUNCTION_CALL function_call : function_calls) {
+    if (function_call.file_name.compare(file_name) == 0) {
+      if (function_call.function_name.compare(function_name) == 0) {
+        if (function_call.line_number == line_number) {
+          // possible call targets for this call in function_call.calls
+          if (function_call.calls.size() > 0) {
+            // assume all functions in calls vector have the same label
+            CFG_FUNCTION tmp = function_call.calls.front();
+
+            return get_label_for_existing_function(tmp.function_name, tmp.file_name);
+          }
+        }
+      }
+    }
+  }
+
+  return -1;
+}
 
 namespace {
   const struct pass_data my_first_pass_data =
@@ -177,10 +252,23 @@ struct my_first_pass : gimple_opt_pass
     }     
   }
 
-  void instrumentFunctionEntry(const tree_node *tree, char *fName, basic_block firstBlock, rtx_insn *firstInsn) {
-    //TODO: Set Label propperly
-    emitAsmInput("CHECKLABEL 0x42", firstInsn, firstBlock, false);
-    //printf ("    Generating CHECKLABEL \n");
+  rtx_insn* instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+    //char buff[14];
+    //snprintf(buff, sizeof(buff), "CHECKLABEL %d", 12);
+
+    char buff[14] = "CHECKLABEL 12";  // does NOT work
+    const char *buff1 = "CHECKLABEL 12";    // works
+
+    std::string tmp = "CHECKLABEL 34";  
+    const char *buff2 = tmp.c_str();  // does NOT work
+    const char *buff3 = &tmp[0];      // does NOT work
+    char *buff4 = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff4);
+    buff4[tmp.size()] = '\0';
+
+    printf("COMMAND: --%s-- \n", buff4);
+
+    return emitAsmInput(buff4, firstInsn, firstBlock, false);
   }
 
   void instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -197,10 +285,10 @@ struct my_first_pass : gimple_opt_pass
     //printf ("    Generating SETPC \n");
   }
 
-  void instrumentIndirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    //TODO: Set Label propperly
-    emitAsmInput("SETPCLABEL 0x42", insn, block, false);
-    //printf ("    Generating SETPCLABEL \n");
+  rtx_insn* instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+    int label = 12;//get_label_for_function_call(function_name, file_name, line_number);
+    
+    return emitAsmInput("SETPCLABEL 0x12", insn, block, false);
   }
 
   void instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -217,10 +305,10 @@ struct my_first_pass : gimple_opt_pass
   virtual unsigned int execute(function * fun) override
   {    
     const_tree funTree = get_base_address(current_function_decl);
-	  char* funName = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
-    printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",funName);
+	  char* function_name = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
+    printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",function_name);
 
-    printf("FUNCTION NAME: %s \n", funName);
+    printf("FUNCTION NAME: %s \n", function_name);
     printf("FUNCTION ADDRESS: %p\n", current_function_decl);
 
     //debug_tree(current_function_decl);
@@ -229,10 +317,11 @@ struct my_first_pass : gimple_opt_pass
       basic_block bb;
 
       // Don't instrument function entry of MAIN
-      if (strcmp(funName, "main") != 0) {
+      if (strcmp(function_name, "main") != 0) {
         bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
         rtx_insn* firstInsn = firstRealINSN(bb);
-        instrumentFunctionEntry(funTree, funName, bb, firstInsn);
+        rtx_insn *tmp = instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
+        debug_rtx(tmp);
       }
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -277,36 +366,38 @@ struct my_first_pass : gimple_opt_pass
             }
 
             if (func != 0) {
-              const char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
+              char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
 
               //TODO: Is this a sufficient check for setjmp/longjmp?
               if (strcmp(fName, "setjmp") == 0) {
-                instrumentSetJumpFunctionCall(funTree, funName, bb, insn);
+                instrumentSetJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      setjmp \n");
               } else if (strcmp(fName, "longjmp") == 0) {
-                instrumentLongJumpFunctionCall(funTree, funName, bb, insn);
+                instrumentLongJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      longjmp \n");
               } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0) {
                 // do nothing
               } else {
-                instrumentDirectFunctionCall(funTree, funName, bb, insn);
+                instrumentDirectFunctionCall(funTree, fName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
               }
             } else if (!isDirectCall) {
-              instrumentIndirectFunctionCall(funTree, funName, bb, insn);
+              rtx_insn * tmp = instrumentIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
+              
+              debug_rtx(tmp);
               printf("      calling function INDIRECTLY \n");
             }
-          } else if (JUMP_P(insn) && strcmp(funName, "main") != 0) {
+          } else if (JUMP_P(insn) && strcmp(function_name, "main") != 0) {
             // Don't instrument function return of main
             rtx ret = XEXP(insn, 0);
             ret = PATTERN(insn);
             if (GET_CODE (ret) == PARALLEL) {
               ret = XVECEXP(ret, 0, 0);
               if (ANY_RETURN_P(ret)) {
-              instrumentFunctionReturn(funTree, funName, bb, insn);
+              instrumentFunctionReturn(funTree, function_name, bb, insn);
               }
             } else if (ANY_RETURN_P(ret)) {
-              instrumentFunctionReturn(funTree, funName, bb, insn);
+              instrumentFunctionReturn(funTree, function_name, bb, insn);
             }
           }
         }
@@ -314,7 +405,7 @@ struct my_first_pass : gimple_opt_pass
 /*
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          instrumentFunctionExit(funTree, funName, bb, lastInsn);
+          instrumentFunctionExit(funTree, function_name, bb, lastInsn);
         } */
       }
 
@@ -334,44 +425,6 @@ struct my_first_pass : gimple_opt_pass
 };
 }
 
-struct CFG_FUNCTION {
-    std::string file_name;
-    std::string function_name;
-};
-
-struct CFG_EXISTING_FUNCTION {
-    std::string file_name;
-    std::string function_name;
-    std::vector<CFG_FUNCTION> called_by;
-};
-
-struct CFG_FUNCTION_CALL {
-    std::string file_name;
-    std::string function_name;
-    int line_number;
-    std::vector<CFG_FUNCTION> calls;
-};
-
-std::vector<CFG_EXISTING_FUNCTION> existing_functions;
-std::vector<CFG_FUNCTION_CALL> function_calls;
-
-void print_existing_functions() {
-  for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
-    std::cout << "FUNCTION: " << existing_function.function_name << " (" << existing_function.file_name << ")" << '\n';
-    for(CFG_FUNCTION called_by : existing_function.called_by) {
-      std::cout << "    called by: " << called_by.function_name << " (" << called_by.file_name << ")" << '\n';
-    }
-  }
-}
-
-void print_function_call() {
-  for(CFG_FUNCTION_CALL function_call : function_calls) {
-    std::cout << "FUNCTION: " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
-    for(CFG_FUNCTION calls : function_call.calls) {
-      std::cout << "    calls: " << calls.function_name << " (" << calls.file_name << ")" << '\n';
-    }
-  }
-}
 
 void read_cfg_file() {
   //TODO: set relative path
@@ -384,7 +437,7 @@ void read_cfg_file() {
   bool section_calls = false;
 
   size_t pos = 0;
-  std::string token, token_name, token_file, file_name, function_name, line_number;
+  std::string token, token_name, token_file, file_name, function_name, line_number, label;
   std::string delimiter = " ";
   std::string delimiter_entry = ":";
 
@@ -410,9 +463,15 @@ void read_cfg_file() {
         function_name = line.substr(0, pos);
         line.erase(0, pos + delimiter.length());
 
+        // extract label
+        pos = line.find(delimiter);
+        label = line.substr(0, pos-1);
+        line.erase(0, pos + delimiter.length());
+
         CFG_EXISTING_FUNCTION cfg_function;
         cfg_function.file_name = file_name;
         cfg_function.function_name = function_name;
+        cfg_function.label = std::stoi(label);
 
         // extract allowed callers of this function
         while ((pos = line.find(delimiter)) != std::string::npos) {
@@ -516,7 +575,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     /* user_data */
                     &my_gcc_plugin_info);
 
-  //read_cfg_file();
+  read_cfg_file();
   //print_existing_functions();
   //print_function_call();
 
