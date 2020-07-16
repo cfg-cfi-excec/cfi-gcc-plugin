@@ -420,9 +420,9 @@ struct my_first_pass : gimple_opt_pass
 }
 
 
-void read_cfg_file() {
+void read_cfg_file(char * filename) {
   //TODO: set relative path
-  std::ifstream input( "/home/mario/Desktop/examples/simple/cfg.txt" );
+  std::ifstream input( filename );
 
   std::string allowed_calls_title = "# allowed calls";
   std::string calls_title = "# calls";
@@ -563,15 +563,21 @@ int plugin_init(struct plugin_name_args *plugin_info,
     return 1;
   }
 
+  for (int i = 0; i < plugin_info->argc; i++) {
+    if (std::strcmp(plugin_info->argv[i].key, "cfg_file") == 0) {
+      std::cout << "CFG file for instrumentation: " << plugin_info->argv[i].value << "\n";
+
+      read_cfg_file(plugin_info->argv[i].value);
+      //print_existing_functions();
+      //print_function_call();
+    }
+  }
+  
   register_callback(plugin_info->base_name,
                     /* event */ PLUGIN_INFO,
                     /* callback */ NULL,
                     /* user_data */
                     &my_gcc_plugin_info);
-
-  read_cfg_file();
-  //print_existing_functions();
-  //print_function_call();
 
   // Register the phase right after cfg
   struct register_pass_info pass_info;
