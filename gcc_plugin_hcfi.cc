@@ -73,6 +73,8 @@ int get_label_for_existing_function(std::string function_name, std::string file_
     }
   }
 
+  printf("NOT FOUND: %s -- %s \n\n", function_name.c_str(), file_name.c_str());
+
   return -1;
 }
 
@@ -254,6 +256,8 @@ struct my_first_pass : gimple_opt_pass
 
   rtx_insn* instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     int label = get_label_for_existing_function(function_name, file_name);
+
+    //printf("LABEL: %d \n\n\n", label);
     std::string tmp = "CHECKLABEL " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
@@ -318,6 +322,7 @@ struct my_first_pass : gimple_opt_pass
         bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
         rtx_insn* firstInsn = firstRealINSN(bb);
         instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
+        //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
       }
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -371,15 +376,17 @@ struct my_first_pass : gimple_opt_pass
               } else if (strcmp(fName, "longjmp") == 0) {
                 instrumentLongJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      longjmp \n");
-              } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0) {
+              } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "modf") == 0) {
                 // do nothing
               } else {
                 instrumentDirectFunctionCall(funTree, fName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
+                //printf("%s %s %d: %s\n", LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
               }
             } else if (!isDirectCall) {
               instrumentIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               printf("      calling function INDIRECTLY \n");
+              //printf("%s %s %d\n", LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)));
             }
           } else if (JUMP_P(insn) && strcmp(function_name, "main") != 0) {
             // Don't instrument function return of main
@@ -572,7 +579,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
       //print_function_call();
     }
   }
-  
+
   register_callback(plugin_info->base_name,
                     /* event */ PLUGIN_INFO,
                     /* callback */ NULL,
