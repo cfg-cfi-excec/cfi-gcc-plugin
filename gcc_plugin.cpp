@@ -217,7 +217,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else if (strcmp(fName, "longjmp") == 0) {
                 onLongJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      longjmp \n");
-              } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "modf") == 0) {
+
+                //TODO: Find better way to exclude library functions
+              } else if (strcmp(fName, "strlen") == 0 || strcmp(fName, "memcpy") == 0 
+                  || strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "modf") == 0) {
                 // do nothing
               } else {
                 onDirectFunctionCall(funTree, fName, bb, insn);
