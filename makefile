@@ -16,18 +16,21 @@ CXXFLAGS += -O -g -I$(CC_RISCV32)
 
 LDFLAGS = -std=c++11
 
-PLUGIN_NAME = gcc_plugin_hcfi
+ROOT_DIR = ./
+INCLUDE_DIR = -I$(ROOT_DIR)
 
 # top level goal: build our plugin as a shared library
-all: $(PLUGIN_NAME).so
+all: gcc_plugin.so
 
-$(PLUGIN_NAME).so: $(PLUGIN_NAME).o
-	$(CXX) $(LDFLAGS) -shared -o $@ $<
+gcc_plugin.so: gcc_plugin_hcfi.o gcc_plugin.o main.o 
+	$(CXX) $(LDFLAGS) -shared $^ -o $@
 
-$(PLUGIN_NAME).o : $(PLUGIN_NAME).cc 
-	$(CXX) $(CXXFLAGS) -fPIC -c -o $@ $<
+$(ROOT_DIR)/%.o: $(ROOT_DIR)/%.cpp
+	$(CXX) $(INCLUDE_DIR) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f $(PLUGIN_NAME).o $(PLUGIN_NAME).so test
+	rm -f *.so
+	rm -f *.o
+	rm -f ./implementations/*.o
  
 .PHONY: all clean check
