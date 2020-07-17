@@ -20,8 +20,8 @@
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
 
-static struct plugin_info my_gcc_plugin_info =
-{ "1.0", "This is a very simple plugin" };
+static struct plugin_info cfi_plugin_info =
+{ "1.0", "GCC Plugin for instrumenting code with CFI instructions" };
 
 int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version)
@@ -37,7 +37,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     /* event */ PLUGIN_INFO,
                     /* callback */ NULL,
                     /* user_data */
-                    &my_gcc_plugin_info);
+                    &cfi_plugin_info);
 
   // Register the phase right after cfg
   struct register_pass_info pass_info;

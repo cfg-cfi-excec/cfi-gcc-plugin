@@ -1,7 +1,7 @@
 #include "gcc_plugin.h"
 
 GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
-		: rtl_opt_pass(my_first_pass_data, ctxt)
+		: rtl_opt_pass(cfi_plugin_pass_data, ctxt)
 {
 		argc = argcounter;
 		argv = arguments;

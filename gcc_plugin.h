@@ -16,20 +16,18 @@
 #include <tree.h>
 #include <print-tree.h>
 
+const struct pass_data cfi_plugin_pass_data = {
+		.type = RTL_PASS,
+		.name = "cfi_pass",
+		.optinfo_flags = OPTGROUP_NONE,
+		.tv_id = TV_TREE_CLEANUP_CFG,
+		.properties_required = 0,//(PROP_rtl | PROP_cfglayout),
+		.properties_provided = 0,
+		.properties_destroyed = 0,
+		.todo_flags_start = 0,
+		.todo_flags_finish = 0,
+};
 
-
-		const struct pass_data my_first_pass_data = {
-				.type = RTL_PASS,
-				.name = "my_first_pass",
-				.optinfo_flags = OPTGROUP_NONE,
-				.tv_id = TV_TREE_CLEANUP_CFG,
-				.properties_required = 0,//(PROP_rtl | PROP_cfglayout),
-				.properties_provided = 0,
-				.properties_destroyed = 0,
-				.todo_flags_start = 0,
-				.todo_flags_finish = 0,
-		};
-		
 class GCC_PLUGIN : public rtl_opt_pass{
 	public:
 		GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter);
