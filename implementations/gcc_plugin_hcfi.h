@@ -33,13 +33,15 @@ class GCC_PLUGIN_HCFI : public GCC_PLUGIN {
 	protected:
 
 		void onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn);
+		void onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn);
 		void onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn);
 		void onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn);
 		void onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn);
 		void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
-
+		void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
+		
 	private:
 		std::vector<CFG_EXISTING_FUNCTION> existing_functions;
 		std::vector<CFG_FUNCTION_CALL> function_calls;

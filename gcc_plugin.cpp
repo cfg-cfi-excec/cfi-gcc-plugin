@@ -155,10 +155,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
     try{
       basic_block bb;
+      bool recursiveFunction = false;
 
-      bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
-      rtx_insn* firstInsn = firstRealINSN(bb);
-      onFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
+      basic_block firstBb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
+      rtx_insn* firstInsn = firstRealINSN(firstBb);
+      onFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), firstBb, firstInsn);
       //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -206,7 +207,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
 
               //TODO: Is this a sufficient check for setjmp/longjmp?
-              if (strcmp(fName, "setjmp") == 0) {
+              if (strcmp(fName, function_name) == 0) {
+                recursiveFunction = true;
+                onRecursiveFunctionCall(funTree, fName, bb, insn);
+                //printf("      onRecursiveFunctionCall \n");
+              } else if (strcmp(fName, "setjmp") == 0) {
                 onSetJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      setjmp \n");
               } else if (strcmp(fName, "longjmp") == 0) {
@@ -243,6 +248,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           rtx_insn* lastInsn = lastRealINSN(bb);
           onFunctionExit(funTree, function_name, bb, lastInsn);
         } */
+      }
+
+      if (recursiveFunction) {
+        onFunctionRecursionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), firstBb, firstInsn);
       }
 
       printf("\x1b[92m--------------------- Plugin fully ran -----------------------\n\x1b[0m");

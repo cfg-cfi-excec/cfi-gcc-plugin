@@ -76,6 +76,10 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
       emitAsmInput(buff, firstInsn, firstBlock, false);
     }
   }
+  
+  void GCC_PLUGIN_HCFI::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+    onFunctionEntry(file_name, function_name, line_number, firstBlock, firstInsn);
+  }
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
@@ -86,7 +90,7 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
   }
 
   void GCC_PLUGIN_HCFI::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-
+    
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -103,6 +107,10 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
     buff[tmp.size()] = '\0';
 
     emitAsmInput(buff, insn, block, false);
+  }
+
+  void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(tree, fName, block, insn);
   }
 
   void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {

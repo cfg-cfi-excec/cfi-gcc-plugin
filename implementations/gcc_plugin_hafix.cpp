@@ -18,6 +18,18 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
+  void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+    unsigned label = getLabelFromTmpFile();
+
+    std::string tmp = "CFIREC " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, firstInsn, firstBlock, false);
+  }
+
   void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
@@ -47,6 +59,10 @@
     }
 
     emitAsmInput(buff, tmpInsn, block, false);
+  }
+
+  void GCC_PLUGIN_HAFIX::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(tree, fName, block, insn);
   }
 
   void GCC_PLUGIN_HAFIX::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
