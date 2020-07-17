@@ -24,6 +24,14 @@ int plugin_is_GPL_compatible = 1;
 static struct plugin_info cfi_plugin_info =
 { "1.0", "GCC Plugin for instrumenting code with CFI instructions" };
 
+GCC_PLUGIN *gcc_plugin = NULL;
+
+void finish_gcc(void *gcc_data, void *user_data) {
+  if (gcc_plugin != NULL) {
+	gcc_plugin->onPluginFinished();
+  }
+}
+
 int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version) {
 	if(!plugin_default_version_check(version, &gcc_version)) {
@@ -31,8 +39,6 @@ int plugin_init(struct plugin_name_args *plugin_info,
 			<< "." << GCCPLUGIN_VERSION_MINOR << "\n";
 		return 1;
 	}
-
-	GCC_PLUGIN *gcc_plugin = NULL;
 
 	for (int i = 0; i < plugin_info->argc; i++) {
 		if (std::strcmp(plugin_info->argv[i].key, "cfi_implementation") == 0) {
@@ -70,7 +76,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
 	pass_info.pos_op = PASS_POS_INSERT_AFTER;
 
 	register_callback(plugin_info->base_name, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
-	//register_callback(plugin_info->base_name, PLUGIN_FINISH, );
+	register_callback(plugin_info->base_name, PLUGIN_FINISH, finish_gcc, NULL);
 
 	return 0;
 }

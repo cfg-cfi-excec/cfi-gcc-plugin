@@ -28,6 +28,7 @@ class GCC_PLUGIN_HCFI : public GCC_PLUGIN {
 		GCC_PLUGIN_HCFI(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter);
 
 		GCC_PLUGIN_HCFI *clone();
+		void onPluginFinished();
 
 	protected:
 

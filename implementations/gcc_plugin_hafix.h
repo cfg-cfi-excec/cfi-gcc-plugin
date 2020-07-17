@@ -8,7 +8,8 @@ class GCC_PLUGIN_HAFIX : public GCC_PLUGIN {
 		GCC_PLUGIN_HAFIX(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter);
 
 		GCC_PLUGIN_HAFIX *clone();
-
+		void onPluginFinished();
+		
 	protected:
 
 		void instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn);

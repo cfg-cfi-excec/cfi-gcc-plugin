@@ -34,6 +34,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 
 		unsigned int execute(function *fun);
 		virtual GCC_PLUGIN *clone() = 0;
+		virtual void onPluginFinished() = 0;
 
 	protected:
 		int argc;

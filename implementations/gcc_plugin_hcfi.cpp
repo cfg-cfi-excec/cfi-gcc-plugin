@@ -285,3 +285,7 @@ GCC_PLUGIN_HCFI *GCC_PLUGIN_HCFI::clone()
   // We do not clone ourselves
   return this;
 }
+
+	void GCC_PLUGIN_HCFI::onPluginFinished() {
+
+  }
