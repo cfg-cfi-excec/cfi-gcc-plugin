@@ -158,7 +158,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
       bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
       rtx_insn* firstInsn = firstRealINSN(bb);
-      instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
+      onFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
       //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -207,20 +207,20 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
               //TODO: Is this a sufficient check for setjmp/longjmp?
               if (strcmp(fName, "setjmp") == 0) {
-                instrumentSetJumpFunctionCall(funTree, fName, bb, insn);
+                onSetJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      setjmp \n");
               } else if (strcmp(fName, "longjmp") == 0) {
-                instrumentLongJumpFunctionCall(funTree, fName, bb, insn);
+                onLongJumpFunctionCall(funTree, fName, bb, insn);
                 printf("      longjmp \n");
               } else if (strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "modf") == 0) {
                 // do nothing
               } else {
-                instrumentDirectFunctionCall(funTree, fName, bb, insn);
+                onDirectFunctionCall(funTree, fName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
                 //printf("%s %s %d: %s\n", LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
               }
             } else if (!isDirectCall) {
-              instrumentIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
+              onIndirectFunctionCall(LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               printf("      calling function INDIRECTLY \n");
               //printf("%s %s %d\n", LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)));
             }
@@ -230,10 +230,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             if (GET_CODE (ret) == PARALLEL) {
               ret = XVECEXP(ret, 0, 0);
               if (ANY_RETURN_P(ret)) {
-              instrumentFunctionReturn(funTree, function_name, bb, insn);
+              onFunctionReturn(funTree, function_name, bb, insn);
               }
             } else if (ANY_RETURN_P(ret)) {
-              instrumentFunctionReturn(funTree, function_name, bb, insn);
+              onFunctionReturn(funTree, function_name, bb, insn);
             }
           }
         }
@@ -241,7 +241,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 /*
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          instrumentFunctionExit(funTree, function_name, bb, lastInsn);
+          onFunctionExit(funTree, function_name, bb, lastInsn);
         } */
       }
 

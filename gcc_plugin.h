@@ -39,13 +39,13 @@ class GCC_PLUGIN : public rtl_opt_pass{
 	protected:
 		int argc;
 		struct plugin_argument *argv;
-		virtual void instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) = 0;
-		virtual void instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
-		virtual void instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
-		virtual void instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
-		virtual void instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn)  = 0;
-		virtual void instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
-		virtual void instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
+		virtual void onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) = 0;
+		virtual void onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
+		virtual void onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
+		virtual void onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
+		virtual void onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn)  = 0;
+		virtual void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
+		virtual void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);

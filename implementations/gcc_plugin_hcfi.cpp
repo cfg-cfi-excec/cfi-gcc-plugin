@@ -61,7 +61,7 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
   return -1;
 }
 
-  void GCC_PLUGIN_HCFI::instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = get_label_for_existing_function(function_name, file_name);
@@ -77,7 +77,7 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
     }
   }
 
-  void GCC_PLUGIN_HCFI::instrumentFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name, "main") != 0) {
       emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
@@ -85,16 +85,16 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
     }
   }
 
-  void GCC_PLUGIN_HCFI::instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
 
   }
 
-  void GCC_PLUGIN_HCFI::instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     emitAsmInput("SETPC", insn, block, false);
     //printf ("    Generating SETPC \n");
   }
 
-  void GCC_PLUGIN_HCFI::instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
     int label = get_label_for_function_call(function_name, file_name, line_number);
     std::string tmp = "SETPCLABEL " + std::to_string(label);  
 
@@ -105,13 +105,13 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
     emitAsmInput(buff, insn, block, false);
   }
 
-  void GCC_PLUGIN_HCFI::instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     //TODO: Set Label propperly
     emitAsmInput("SJCFI 0x42", insn, block, false);
     //printf ("    Generating SJCFI \n");
   }
 
-  void GCC_PLUGIN_HCFI::instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     emitAsmInput("LJCFI", insn, block, false);
     //printf ("    Generating LJCFI \n");
   }

@@ -5,7 +5,7 @@
     init();
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     writeLabelToTmpFile(getLabelFromTmpFile()+1);
     unsigned label = getLabelFromTmpFile();
 
@@ -18,7 +18,7 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
 
@@ -29,11 +29,11 @@
     emitAsmInput(buff, lastInsn, lastBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
 
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
@@ -49,7 +49,7 @@
     emitAsmInput(buff, tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
     unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
@@ -65,11 +65,11 @@
     emitAsmInput(buff, tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     // Do nothing...
   }
 
-  void GCC_PLUGIN_HAFIX::instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     // Do nothing...
   }
 
