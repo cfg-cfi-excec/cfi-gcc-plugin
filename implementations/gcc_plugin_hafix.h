@@ -20,7 +20,7 @@ class GCC_PLUGIN_HAFIX : public GCC_PLUGIN {
 		void instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 
 	private:
-	
+		unsigned label = 0;
 		void init();
 };
 
