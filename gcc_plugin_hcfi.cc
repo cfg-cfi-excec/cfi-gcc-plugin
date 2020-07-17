@@ -428,11 +428,10 @@ struct my_first_pass : gimple_opt_pass
 
 
 void read_cfg_file(char * filename) {
-  //TODO: set relative path
   std::ifstream input( filename );
 
   std::string allowed_calls_title = "# allowed calls";
-  std::string calls_title = "# calls";
+  std::string calls_title = "# indirect calls";
 
   bool section_allowed_calls = false;
   bool section_calls = false;
