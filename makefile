@@ -23,7 +23,7 @@ INCLUDE_DIR = -I$(ROOT_DIR) -I$(IMPLEMENTATIONS_DIR)
 # top level goal: build our plugin as a shared library
 all: gcc_plugin.so
 
-gcc_plugin.so: ./implementations/gcc_plugin_hcfi.o gcc_plugin.o main.o 
+gcc_plugin.so: ./implementations/gcc_plugin_hcfi.o  ./implementations/gcc_plugin_hafix.o gcc_plugin.o main.o 
 	$(CXX) $(LDFLAGS) -shared $^ -o $@
 
 %.o: %.cpp
