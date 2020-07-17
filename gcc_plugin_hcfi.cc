@@ -560,6 +560,25 @@ void read_cfg_file(char * filename) {
   }
 }
 
+/*
+// Attribute handler callback
+static tree handle_user_attribute (tree *node, tree name, tree args, int flags, bool *no_add_attrs) {
+  std::cout << "CALL ATTRI ##############################################################"  << "\n";
+ 
+  debug_tree(*node);
+  debug_tree(args);
+
+  return NULL_TREE;
+}
+
+// Attribute definition
+static struct attribute_spec user_attr = { "user", 1, 1, false,  false, false, handle_user_attribute, false };
+
+static void register_attributes (void *event_data, void *data) {
+  register_attribute (&user_attr);
+}
+*/
+
 int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version)
 {
@@ -585,6 +604,14 @@ int plugin_init(struct plugin_name_args *plugin_info,
                     /* callback */ NULL,
                     /* user_data */
                     &my_gcc_plugin_info);
+
+  /*
+  register_callback(
+                    plugin_info->base_name,
+                    PLUGIN_ATTRIBUTES,
+                    register_attributes,
+                    NULL);
+  */
 
   // Register the phase right after cfg
   struct register_pass_info pass_info;
