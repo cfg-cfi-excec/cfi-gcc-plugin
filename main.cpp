@@ -15,7 +15,7 @@
 #include <print-tree.h>
 
 #include "gcc_plugin.h"
-#include "gcc_plugin_hcfi.h"
+#include "./implementations/gcc_plugin_hcfi.h"
 
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
