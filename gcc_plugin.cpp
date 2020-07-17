@@ -156,13 +156,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     try{
       basic_block bb;
 
-      // Don't instrument function entry of MAIN
-      if (strcmp(function_name, "main") != 0) {
-        bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
-        rtx_insn* firstInsn = firstRealINSN(bb);
-        instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
-        //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
-      }
+      bb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
+      rtx_insn* firstInsn = firstRealINSN(bb);
+      instrumentFunctionEntry(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), bb, firstInsn);
+      //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
 
       FOR_EACH_BB_FN(bb, cfun){
           
@@ -227,8 +224,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               printf("      calling function INDIRECTLY \n");
               //printf("%s %s %d\n", LOCATION_FILE(INSN_LOCATION (insn)), function_name, LOCATION_LINE(INSN_LOCATION (insn)));
             }
-          } else if (JUMP_P(insn) && strcmp(function_name, "main") != 0) {
-            // Don't instrument function return of main
+          } else if (JUMP_P(insn)) {
             rtx ret = XEXP(insn, 0);
             ret = PATTERN(insn);
             if (GET_CODE (ret) == PARALLEL) {

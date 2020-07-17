@@ -62,21 +62,27 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
 }
 
   void GCC_PLUGIN_HCFI::instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    int label = get_label_for_existing_function(function_name, file_name);
+    // Don't instrument function entry of MAIN
+    if (strcmp(function_name.c_str(), "main") != 0) {
+      int label = get_label_for_existing_function(function_name, file_name);
 
-    //printf("LABEL: %d \n\n\n", label);
-    std::string tmp = "CHECKLABEL " + std::to_string(label);  
+      //printf("LABEL: %d \n\n\n", label);
+      std::string tmp = "CHECKLABEL " + std::to_string(label);  
 
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
+      char *buff = new char[tmp.size()+1];
+      std::copy(tmp.begin(), tmp.end(), buff);
+      buff[tmp.size()] = '\0';
 
-    emitAsmInput(buff, firstInsn, firstBlock, false);
+      emitAsmInput(buff, firstInsn, firstBlock, false);
+    }
   }
 
-  void GCC_PLUGIN_HCFI::instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-    emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
-    //printf ("    Generating CHECKPC \n");
+  void GCC_PLUGIN_HCFI::instrumentFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
+    // Don't instrument function entry of MAIN
+    if (strcmp(function_name, "main") != 0) {
+      emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
+      //printf ("    Generating CHECKPC \n");
+    }
   }
 
   void GCC_PLUGIN_HCFI::instrumentFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {

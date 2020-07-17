@@ -70,6 +70,7 @@ int plugin_init(struct plugin_name_args *plugin_info,
 	pass_info.pos_op = PASS_POS_INSERT_AFTER;
 
 	register_callback(plugin_info->base_name, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+	//register_callback(plugin_info->base_name, PLUGIN_FINISH, );
 
 	return 0;
 }

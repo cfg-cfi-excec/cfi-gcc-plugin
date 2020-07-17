@@ -6,7 +6,8 @@
   }
 
   void GCC_PLUGIN_HAFIX::instrumentFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    label++;
+    writeLabelToTmpFile(getLabelFromTmpFile()+1);
+    unsigned label = getLabelFromTmpFile();
 
     std::string tmp = "CFIBR " + std::to_string(label);  
 
@@ -18,6 +19,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::instrumentFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+    unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
@@ -32,17 +34,35 @@
   }
 
   void GCC_PLUGIN_HAFIX::instrumentDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
 
-    emitAsmInput(buff, NEXT_INSN(insn), block, true);
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    emitAsmInput(buff, tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_HAFIX::instrumentIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    
+    unsigned label = getLabelFromTmpFile();
+    std::string tmp = "CFIRET " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    emitAsmInput(buff, tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_HAFIX::instrumentSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -51,6 +71,28 @@
 
   void GCC_PLUGIN_HAFIX::instrumentLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     // Do nothing...
+  }
+
+  void GCC_PLUGIN_HAFIX::writeLabelToTmpFile(unsigned label) {
+    clearTmpFile();
+
+    std::ofstream tmp ("tmp.txt");
+    tmp << std::to_string(label) << "\n";
+    tmp.close();
+  }
+
+  unsigned GCC_PLUGIN_HAFIX::getLabelFromTmpFile() {
+    std::ifstream tmp ("tmp.txt");
+    std::string label;
+    std::getline(tmp, label);
+    tmp.close();
+
+    return atoi(label.c_str());
+  }
+
+  void GCC_PLUGIN_HAFIX::clearTmpFile() {
+    std::ofstream tmp ("tmp.txt", std::ofstream::out | std::ofstream::trunc);
+    tmp.close();
   }
 
   void GCC_PLUGIN_HAFIX::init() {
