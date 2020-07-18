@@ -30,6 +30,10 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
+  void GCC_PLUGIN_HAFIX::onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+
+  }
+
   void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = getLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  

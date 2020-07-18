@@ -265,6 +265,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             } else if (ANY_RETURN_P(ret)) {
               onFunctionReturn(funTree, function_name, bb, insn);
             }
+          } else if (LABEL_P(insn) && LABEL_NAME (insn) != NULL) {             
+            rtx_insn *tmp = NEXT_INSN(insn);
+            while (NOTE_P(tmp)) {
+              tmp = NEXT_INSN(tmp);
+            }
+
+            onNamedLabel(funTree, function_name, bb, tmp);
           }
         }
 
