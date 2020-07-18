@@ -6,7 +6,7 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    unsigned label = 123;
+    /*unsigned label = 123;
 
     std::string tmp = "CFIBR " + std::to_string(label);  
 
@@ -14,7 +14,26 @@
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
 
-    emitAsmInput(buff, firstInsn, firstBlock, false);
+    emitAsmInput(buff, firstInsn, firstBlock, false);*/
+
+/*
+    rtx_code_label *new_label = gen_label_rtx ();
+    rtx_insn* label = emit_label (new_label);
+
+    debug_rtx(label);
+    rtx_insn* jump =  emit_jump_insn (gen_jump  (label));
+    debug_rtx(jump);
+
+    basic_block new_bb = create_basic_block (label, jump, firstBlock);
+    new_bb->aux = firstBlock->aux;
+    new_bb->count = firstBlock->count;
+    firstBlock->aux = new_bb;
+    emit_barrier_after_bb (new_bb);
+    make_single_succ_edge (new_bb, firstBlock, 0);*/
+
+
+
+    //emitInsn(jump, firstInsn, firstBlock, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
@@ -30,14 +49,34 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-    unsigned label = 123;
-    std::string tmp = "CFIDEL " + std::to_string(label);  
+    
+    //This Jump-Approach actually works:
+    /*
+    rtx_insn* label = emitCodeLabel(1234, lastInsn, lastBlock, false);
+	  rtx_insn* jump =  emit_jump_insn (gen_jump  (label));
+   
+    JUMP_LABEL(jump) = label;
+	  LABEL_NUSES (label)++;
+ 	  emit_barrier ();
+    */
+
+
+    //This code works for generating trampolines:
+    std::string tmp = "J functionWithReturnValueWithArgument+4";  
 
     char *buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
 
-    emitAsmInput(buff, lastInsn, lastBlock, false);
+    rtx_insn *insn = emitAsmInput(buff, lastInsn, lastBlock, true);
+    
+    tmp = "CFICHK " + std::to_string(42);  
+
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, insn, lastBlock, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -95,4 +134,8 @@
   GCC_PLUGIN_TRAMPOLINES *GCC_PLUGIN_TRAMPOLINES::clone() {
     // We do not clone ourselves
     return this;
+  }
+
+  void GCC_PLUGIN_TRAMPOLINES::onPluginFinished() {
+
   }

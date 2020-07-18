@@ -51,6 +51,18 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   }
 
   /*
+  * Actually emits the codelabel at the desired place
+  */
+  rtx_insn* GCC_PLUGIN::emitLabel(rtx label, rtx_insn* attachRtx, bool after){
+    if(after){
+      return emit_label_after(label, attachRtx);
+    }
+    else{
+      return emit_label_before(label, attachRtx);
+    }
+  }
+
+  /*
   * Actually emits the insn at the desired place.
   */
   rtx_insn* GCC_PLUGIN::emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after){
@@ -101,6 +113,16 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     vec->elem[1] = clobber;
     rtx par = gen_rtx_PARALLEL(VOIDmode, vec);
     rtx_insn* insn = emitInsn(par, attachRtx, bb, after);
+    return insn;
+  }
+
+  /**
+  * Emits: .codeLabel
+  */
+  rtx_insn* GCC_PLUGIN::emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after){
+    //rtx_insn* next = NEXT_INSN(attachRtx);
+    rtx codeLab = gen_label_rtx();
+    rtx_insn* insn = emitLabel(codeLab, attachRtx, after);
     return insn;
   }
 
