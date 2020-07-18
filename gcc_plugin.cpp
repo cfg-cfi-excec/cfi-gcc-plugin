@@ -264,6 +264,15 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               }
             } else if (ANY_RETURN_P(ret)) {
               onFunctionReturn(funTree, function_name, bb, insn);
+            } else if (GET_CODE (ret) == SET) {
+              rtx reg = XEXP(PATTERN(insn), 1);
+              if (((rtx_code)reg->code) == REG) {
+                onIndirectJump(funTree, function_name, bb, insn);
+                //debug_rtx(insn);
+                //debug_rtx(REG_NOTES(reg));
+                //printf("INDIRECT JUMP: %s\n\n", XSTR(reg, 0));
+                //printf("INDIRECT JUMP: %s %d\n\n", LOCATION_FILE(INSN_LOCATION ((insn))), LOCATION_LINE(INSN_LOCATION ((insn))));
+              }
             }
           } else if (LABEL_P(insn) && LABEL_NAME (insn) != NULL) {             
             rtx_insn *tmp = NEXT_INSN(insn);
@@ -271,7 +280,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               tmp = NEXT_INSN(tmp);
             }
 
+            //debug_rtx(insn);
             onNamedLabel(funTree, function_name, bb, tmp);
+            //printf("LABEL: %s %d\n", LOCATION_FILE(INSN_LOCATION (insn)), LOCATION_LINE(INSN_LOCATION (insn)));
+            //printf("LABEL: %s %d\n\n", LOCATION_FILE(INSN_LOCATION (tmp)), LOCATION_LINE(INSN_LOCATION (tmp)));
           }
         }
 

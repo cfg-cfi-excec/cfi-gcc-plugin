@@ -118,6 +118,19 @@
 
     emitAsmInput(buff, insn, block, false);
   }
+  
+  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+    //TODO: Set Label
+    unsigned label = 123;
+
+    std::string tmp = "CFIPRJ " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, insn, block, false);
+  }
 
   void GCC_PLUGIN_TRAMPOLINES::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     // Do nothing...

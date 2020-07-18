@@ -42,6 +42,7 @@ class GCC_PLUGIN_HCFI : public GCC_PLUGIN {
 		void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
+		void onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		
 	private:
 		std::vector<CFG_EXISTING_FUNCTION> existing_functions;

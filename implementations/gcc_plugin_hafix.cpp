@@ -33,6 +33,10 @@
   void GCC_PLUGIN_HAFIX::onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
 
   }
+  
+  void GCC_PLUGIN_HAFIX::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+
+  }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = getLabelFromTmpFile();

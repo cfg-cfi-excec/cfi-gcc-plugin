@@ -112,6 +112,10 @@ int GCC_PLUGIN_HCFI::get_label_for_function_call(std::string function_name, std:
   void GCC_PLUGIN_HCFI::onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
 
   }
+  
+  void GCC_PLUGIN_HCFI::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+
+  }
 
   void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(tree, fName, block, insn);
