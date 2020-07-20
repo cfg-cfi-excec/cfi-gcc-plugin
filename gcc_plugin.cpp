@@ -241,7 +241,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 printf("      longjmp \n");
 
                 //TODO: Find better way to exclude library functions
-              } else if (strcmp(fName, "strlen") == 0 || strcmp(fName, "memcpy") == 0 
+              } else if (strcmp(fName, "strcmp") == 0 || strcmp(fName, "strlen") == 0 || strcmp(fName, "memcpy") == 0  || strcmp(fName, "__builtin_putchar") == 0
                   || strcmp(fName, "printf") == 0 || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "modf") == 0) {
                 // do nothing
               } else {
