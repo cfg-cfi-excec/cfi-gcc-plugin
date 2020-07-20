@@ -6,6 +6,17 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+    //TODO: Set Label
+    unsigned label = 123;
+
+    std::string tmp = "CFICHK " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, firstInsn, firstBlock, false);
+    
     /*unsigned label = 123;
 
     std::string tmp = "CFIBR " + std::to_string(label);  
@@ -86,7 +97,29 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-   
+    //TODO: Set label
+    unsigned label = 123;
+
+    std::string tmp = "CFIBR " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, insn, block, false);
+
+    tmp = "CFIRET " + std::to_string(label);  
+
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    emitAsmInput(buff, tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -94,6 +127,39 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+    //TODO: Set label
+    unsigned label = 123;
+
+    std::string tmp = "CFIBR " + std::to_string(label);  
+
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, insn, block, false);
+    
+    //TODO: Set different label
+    tmp = "CFIPRC " + std::to_string(label);  
+
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    emitAsmInput(buff, insn, block, false);
+
+    tmp = "CFIRET " + std::to_string(label);  
+
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    emitAsmInput(buff, tmpInsn, block, false);
+    
     //printf("\nasdf###########################################\n");
     //debug_rtx(insn);
     //printf("\n###########################################\n");
