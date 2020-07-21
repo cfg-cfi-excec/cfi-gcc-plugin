@@ -378,6 +378,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
     return -1;
   }
+	
+  std::vector<CFG_EXISTING_FUNCTION> GCC_PLUGIN::getExistingFunctions() {
+    return existing_functions;
+  }
 
   void GCC_PLUGIN::readConfigFile(char * filename) {
     std::ifstream input( filename );

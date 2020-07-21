@@ -89,6 +89,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void readConfigFile(char * file_name);
 		void prinExistingFunctions();
 		void printFunctionCalls();
+		std::vector<CFG_EXISTING_FUNCTION> getExistingFunctions();
 		int getLabelForExistingFunction(std::string function_name, std::string file_name);
 		int getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number);
 
