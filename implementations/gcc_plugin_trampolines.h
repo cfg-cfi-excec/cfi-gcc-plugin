@@ -25,18 +25,7 @@ class GCC_PLUGIN_TRAMPOLINES : public GCC_PLUGIN {
 		void onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		
 	private:
-		std::vector<CFG_EXISTING_FUNCTION> existing_functions;
-		std::vector<CFG_FUNCTION_CALL> function_calls;
-
 		void init();
-		void clearTmpFile();
-		void writeLabelToTmpFile(unsigned label);
-		unsigned getLabelFromTmpFile();
-		void read_cfg_file(char * file_name);
-		void print_existing_functions();
-		void print_function_call();
-		int get_label_for_existing_function(std::string function_name, std::string file_name);
-		int get_label_for_function_call(std::string function_name, std::string file_name, int line_number);
 };
 
 #endif /* GCC_PLUGIN_TRAMPOLINES_H_ */

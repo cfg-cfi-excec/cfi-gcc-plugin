@@ -83,6 +83,19 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		bool isReturn(rtx_insn* expr);
 		void printRtxClass(rtx_code code);
 
+		void clearTmpFile();
+		void writeLabelToTmpFile(unsigned label);
+		unsigned readLabelFromTmpFile();
+		void read_cfg_file(char * file_name);
+		void print_existing_functions();
+		void print_function_call();
+		int get_label_for_existing_function(std::string function_name, std::string file_name);
+		int get_label_for_function_call(std::string function_name, std::string file_name, int line_number);
+		
+	private:
+		std::vector<CFG_EXISTING_FUNCTION> existing_functions;
+		std::vector<CFG_FUNCTION_CALL> function_calls;
+
 };
 
 #endif /* GCC_PLUGIN_H_ */

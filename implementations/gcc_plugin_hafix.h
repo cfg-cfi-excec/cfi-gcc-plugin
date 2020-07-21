@@ -26,9 +26,7 @@ class GCC_PLUGIN_HAFIX : public GCC_PLUGIN {
 		
 	private:
 		void init();
-		void clearTmpFile();
-		void writeLabelToTmpFile(unsigned label);
-		unsigned getLabelFromTmpFile();
+		
 };
 
 #endif /* GCC_PLUGIN_HAFIX_H_ */

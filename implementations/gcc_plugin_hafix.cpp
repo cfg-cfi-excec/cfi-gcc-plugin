@@ -6,8 +6,8 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    writeLabelToTmpFile(getLabelFromTmpFile()+1);
-    unsigned label = getLabelFromTmpFile();
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    unsigned label = readLabelFromTmpFile();
 
     std::string tmp = "CFIBR " + std::to_string(label);  
 
@@ -19,7 +19,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    unsigned label = getLabelFromTmpFile();
+    unsigned label = readLabelFromTmpFile();
 
     std::string tmp = "CFIREC " + std::to_string(label);  
 
@@ -39,7 +39,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-    unsigned label = getLabelFromTmpFile();
+    unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
@@ -54,7 +54,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    unsigned label = getLabelFromTmpFile();
+    unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
@@ -74,7 +74,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    unsigned label = getLabelFromTmpFile();
+    unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];
@@ -95,28 +95,6 @@
 
   void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
     // Do nothing...
-  }
-
-  void GCC_PLUGIN_HAFIX::writeLabelToTmpFile(unsigned label) {
-    clearTmpFile();
-
-    std::ofstream tmp ("tmp.txt");
-    tmp << std::to_string(label) << "\n";
-    tmp.close();
-  }
-
-  unsigned GCC_PLUGIN_HAFIX::getLabelFromTmpFile() {
-    std::ifstream tmp ("tmp.txt");
-    std::string label;
-    std::getline(tmp, label);
-    tmp.close();
-
-    return atoi(label.c_str());
-  }
-
-  void GCC_PLUGIN_HAFIX::clearTmpFile() {
-    std::ofstream tmp ("tmp.txt", std::ofstream::out | std::ofstream::trunc);
-    tmp.close();
   }
 
   void GCC_PLUGIN_HAFIX::init() {
