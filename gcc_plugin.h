@@ -28,6 +28,26 @@ const struct pass_data cfi_plugin_pass_data = {
 		.todo_flags_finish = 0,
 };
 
+struct CFG_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+};
+
+struct CFG_EXISTING_FUNCTION {
+    std::string file_name;
+    std::string function_name;
+    std::string cmd_check_label;
+    int label;
+    std::vector<CFG_FUNCTION> called_by;
+};
+
+struct CFG_FUNCTION_CALL {
+    std::string file_name;
+    std::string function_name;
+    int line_number;
+    std::vector<CFG_FUNCTION> calls;
+};
+
 class GCC_PLUGIN : public rtl_opt_pass{
 	public:
 		GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter);
