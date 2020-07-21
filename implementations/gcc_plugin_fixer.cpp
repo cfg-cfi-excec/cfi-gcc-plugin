@@ -18,7 +18,10 @@ struct CFG_FUNCTION_CALL;
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-  
+    // Don't instrument function entry of MAIN
+    if (strcmp(function_name, "main") != 0) {
+      emitAsmInput("CFI_RET", lastInsn, lastBlock, false);
+    }
   }
 
   void GCC_PLUGIN_FIXER::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -26,11 +29,11 @@ struct CFG_FUNCTION_CALL;
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
- 
+    emitAsmInput("CFI_CALL", insn, block, false);
   }
 
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-
+    emitAsmInput("CFI_CALL", insn, block, false);
   }
 
   void GCC_PLUGIN_FIXER::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
