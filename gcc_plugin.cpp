@@ -328,7 +328,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     tmp.close();
   }
 
-  void GCC_PLUGIN::print_existing_functions() {
+  void GCC_PLUGIN::prinExistingFunctions() {
     for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
       std::cout << "FUNCTION: " << existing_function.function_name << " (" << existing_function.file_name << ")" << '\n';
       for(CFG_FUNCTION called_by : existing_function.called_by) {
@@ -337,7 +337,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
   }
 
-  void GCC_PLUGIN::print_function_call() {
+  void GCC_PLUGIN::printFunctionCalls() {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       std::cout << "FUNCTION: " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
       for(CFG_FUNCTION calls : function_call.calls) {
@@ -346,7 +346,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
   }
 
-  int GCC_PLUGIN::get_label_for_existing_function(std::string function_name, std::string file_name) {
+  int GCC_PLUGIN::getLabelForExistingFunction(std::string function_name, std::string file_name) {
     for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
       if (existing_function.file_name.compare(file_name) == 0) {
         if (existing_function.function_name.compare(function_name) == 0) {
@@ -360,7 +360,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return -1;
   }
 
-  int GCC_PLUGIN::get_label_for_function_call(std::string function_name, std::string file_name, int line_number) {
+  int GCC_PLUGIN::getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number) {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       if (function_call.file_name.compare(file_name) == 0) {
         if (function_call.function_name.compare(function_name) == 0) {
@@ -370,7 +370,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               // assume all functions in calls vector have the same label
               CFG_FUNCTION tmp = function_call.calls.front();
 
-              return get_label_for_existing_function(tmp.function_name, tmp.file_name);
+              return getLabelForExistingFunction(tmp.function_name, tmp.file_name);
             }
           }
         }
@@ -380,7 +380,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return -1;
   }
 
-  void GCC_PLUGIN::read_cfg_file(char * filename) {
+  void GCC_PLUGIN::readConfigFile(char * filename) {
     std::ifstream input( filename );
 
     std::string allowed_calls_title = "# allowed calls";

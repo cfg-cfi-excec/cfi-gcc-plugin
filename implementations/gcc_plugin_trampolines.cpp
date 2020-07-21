@@ -12,7 +12,7 @@
   void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
-      int label = get_label_for_existing_function(function_name, file_name);
+      int label = getLabelForExistingFunction(function_name, file_name);
 
       //printf("LABEL: %d \n\n\n", label);
       std::string tmp = "CFICHK " + std::to_string(label);  
@@ -145,7 +145,7 @@
 
     emitAsmInput(buff, insn, block, false);
     
-    unsigned labelPRC = get_label_for_function_call(function_name, file_name, line_number);
+    unsigned labelPRC = getLabelForFunctionCall(function_name, file_name, line_number);
     tmp = "CFIPRC " + std::to_string(labelPRC);  
 
     buff = new char[tmp.size()+1];
@@ -218,9 +218,9 @@
       if (std::strcmp(argv[i].key, "cfg_file") == 0) {
         std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
 
-        read_cfg_file(argv[i].value);
-        //print_existing_functions();
-        //print_function_call();
+        readConfigFile(argv[i].value);
+        //prinExistingFunctions();
+        //printFunctionCalls();
       }
     }
   }
