@@ -61,7 +61,7 @@ struct CFG_FUNCTION_CALL;
 
   }
   
-  void GCC_PLUGIN_HCFI::onIndirectJump(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
 
   }
 
