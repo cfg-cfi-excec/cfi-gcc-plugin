@@ -265,12 +265,18 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             } else if (ANY_RETURN_P(ret)) {
               onFunctionReturn(funTree, function_name, bb, insn);
             } else if (GET_CODE (ret) == SET) {
-              rtx reg = XEXP(PATTERN(insn), 1);
-              if (((rtx_code)reg->code) == REG) {
-                onIndirectJump(funTree, function_name, bb, insn);
-                //debug_rtx(insn);
+              rtx sub = XEXP(PATTERN(insn), 1);
+              if (GET_CODE (sub) == IF_THEN_ELSE) {
+                sub = XEXP(sub, 1);
+              }
+              if (GET_CODE (sub) == LABEL_REF) {
+                onIndirectJump(funTree, function_name, LABEL_NAME (insn), bb, insn);
+                rtx label = XEXP (sub,0);
+                if (LABEL_P(label) && LABEL_NAME (label) != NULL) {             
+                  printf("INDIRECT JUMP to %s\n", LABEL_NAME (label));
+                }
+
                 //debug_rtx(REG_NOTES(reg));
-                //printf("INDIRECT JUMP: %s\n\n", XSTR(reg, 0));
                 //printf("INDIRECT JUMP: %s %d\n\n", LOCATION_FILE(INSN_LOCATION ((insn))), LOCATION_LINE(INSN_LOCATION ((insn))));
               }
             }
@@ -281,7 +287,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             }
 
             //debug_rtx(insn);
-            onNamedLabel(funTree, function_name, bb, tmp);
+            onNamedLabel(funTree, function_name, LABEL_NAME (insn), bb, tmp);
+            printf("NAMED LABEL found: %s\n", LABEL_NAME (insn));
+            //debug_rtx(insn);
+            //printf("\n\n\n\n\n");
             //printf("LABEL: %s %d\n", LOCATION_FILE(INSN_LOCATION (insn)), LOCATION_LINE(INSN_LOCATION (insn)));
             //printf("LABEL: %s %d\n\n", LOCATION_FILE(INSN_LOCATION (tmp)), LOCATION_LINE(INSN_LOCATION (tmp)));
           }

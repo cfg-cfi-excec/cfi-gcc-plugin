@@ -30,11 +30,11 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
 
   }
   
-  void GCC_PLUGIN_HAFIX::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onIndirectJump(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
 
   }
 

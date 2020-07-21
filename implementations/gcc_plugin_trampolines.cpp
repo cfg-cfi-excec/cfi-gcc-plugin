@@ -179,7 +179,7 @@
 
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
     //TODO: Set Label
     unsigned label = 123;
 
@@ -192,7 +192,7 @@
     emitAsmInput(buff, insn, block, false);
   }
   
-  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
     //TODO: Set Label
     unsigned label = 123;
 

@@ -68,8 +68,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 		virtual void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 		virtual void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
-		virtual void onNamedLabel(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
-		virtual void onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
+		virtual void onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) = 0;
+		virtual void onIndirectJump(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) = 0;
 
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
