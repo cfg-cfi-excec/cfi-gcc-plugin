@@ -90,7 +90,7 @@ struct CFG_FUNCTION_CALL;
       };
 
       if (validReg) {        
-        std::string tmp = "cfi_fwd_callee " + regName;  
+        std::string tmp = "cfi_fwd " + regName;  
 
         char *buff = new char[tmp.size()+1];
         std::copy(tmp.begin(), tmp.end(), buff);
