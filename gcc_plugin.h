@@ -45,6 +45,7 @@ struct CFG_FUNCTION_CALL {
     std::string file_name;
     std::string function_name;
     int line_number;
+    int offset;
     std::vector<CFG_FUNCTION> calls;
 };
 
@@ -90,6 +91,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void prinExistingFunctions();
 		void printFunctionCalls();
 		std::vector<CFG_EXISTING_FUNCTION> getExistingFunctions();
+		std::vector<CFG_FUNCTION_CALL> getIndirectFunctionCalls();
 		int getLabelForExistingFunction(std::string function_name, std::string file_name);
 		int getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number);
 

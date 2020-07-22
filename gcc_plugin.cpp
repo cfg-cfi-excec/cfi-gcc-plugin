@@ -383,6 +383,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return existing_functions;
   }
 
+  std::vector<CFG_FUNCTION_CALL> GCC_PLUGIN::getIndirectFunctionCalls() {
+    return function_calls;
+  }
+
   void GCC_PLUGIN::readConfigFile(char * filename) {
     std::ifstream input( filename );
 
@@ -393,7 +397,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     bool section_calls = false;
 
     size_t pos = 0;
-    std::string token, token_name, token_file, file_name, function_name, line_number, label;
+    std::string token, token_name, token_file, file_name, function_name, line_number_with_offset, offset, line_number, label;
     std::string delimiter = " ";
     std::string delimiter_entry = ":";
 
@@ -471,15 +475,26 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           function_name = line.substr(0, pos);
           line.erase(0, pos + delimiter.length());
 
-          // extract line_number
+          // extract line_number and offset
           pos = line.find(delimiter);
-          line_number = line.substr(0, pos-1);
+          line_number_with_offset = line.substr(0, pos-1);
           line.erase(0, pos + delimiter.length());
+
+          pos = line_number_with_offset.find(":");
+          if (pos > 0) {
+            line_number = line_number_with_offset.substr(0, pos-1);
+            line_number_with_offset.erase(0, pos + delimiter.length());
+
+            offset = line_number_with_offset;
+          } else {
+            line_number = line_number_with_offset;
+          }
 
           CFG_FUNCTION_CALL cfg_function;
           cfg_function.file_name = file_name;
           cfg_function.function_name = function_name;
           cfg_function.line_number = std::stoi(line_number);
+          cfg_function.offset = std::stoi(offset);
           
           // extract possible function calls
           while ((pos = line.find(delimiter)) != std::string::npos) {

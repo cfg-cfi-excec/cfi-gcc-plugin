@@ -12,11 +12,11 @@ struct CFG_FUNCTION_CALL;
   void GCC_PLUGIN_FIXER::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     // Load the policy matrix on entry of MAIN
     if (function_name.compare("main") == 0) {
-      std::vector<CFG_EXISTING_FUNCTION> existing_functions = getExistingFunctions();
-      for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
-        for(CFG_FUNCTION called_by : existing_function.called_by) {
-          //printf("Function %s is called by %s \n", existing_function.function_name.c_str(), called_by.function_name.c_str());
-          std::string tmp = "CFI_MATLD_CALLER " + called_by.function_name;  
+      std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
+      for(CFG_FUNCTION_CALL function_call : function_calls) {
+        for(CFG_FUNCTION call : function_call.calls) {
+          //printf("Function %s calls %s at %d\n", function_call.function_name.c_str(), call.function_name.c_str(), function_call.offset);
+          std::string tmp = "CFI_MATLD_CALLER " + function_call.function_name + "+" + std::to_string(function_call.offset);  
 
           char *buff = new char[tmp.size()+1];
           std::copy(tmp.begin(), tmp.end(), buff);
@@ -24,7 +24,7 @@ struct CFG_FUNCTION_CALL;
 
           emitAsmInput(buff, firstInsn, firstBlock, false);
           
-          tmp = "CFI_MATLD_CALLEE " + existing_function.function_name;  
+          tmp = "CFI_MATLD_CALLEE " + call.function_name;  
 
           buff = new char[tmp.size()+1];
           std::copy(tmp.begin(), tmp.end(), buff);
@@ -59,22 +59,50 @@ struct CFG_FUNCTION_CALL;
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
     emitAsmInput("CFI_CALL", insn, block, false);
 
-    std::string tmp = "cfi_fwd_caller " + function_name;  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, insn, block, false);
+    rtx body = PATTERN(insn);
+    rtx parallel = XVECEXP(body, 0, 0);
+    rtx call;
+    if (GET_CODE (parallel) == SET) {
+      call = XEXP(parallel, 1);
+    } else if (GET_CODE (parallel) == CALL) {
+      call = parallel;
+    }
     
-    //TODO: set fp of called function here
-    tmp = "cfi_fwd_callee " + function_name;  
+    rtx mem = XEXP(call, 0);
+    rtx subExpr = XEXP(mem, 0);
 
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
+    if (((rtx_code)subExpr->code) == REG) {
+      bool validReg = true;
+      std::string regName = "";
 
-    emitAsmInput(buff, insn, block, false);
+      switch (REGNO(subExpr)) {
+        case 18: regName = "s2"; break;
+        case 19: regName = "s3"; break;
+        case 20: regName = "s4"; break;
+        case 21: regName = "s5"; break;
+        case 22: regName = "s6"; break;
+        case 23: regName = "s7"; break;
+        case 24: regName = "s8"; break;
+        case 25: regName = "s9"; break;
+        case 26: regName = "s10"; break;
+        case 27: regName = "s11"; break;
+        default: validReg = false;
+      };
+
+      if (validReg) {        
+        std::string tmp = "cfi_fwd_callee " + regName;  
+
+        char *buff = new char[tmp.size()+1];
+        std::copy(tmp.begin(), tmp.end(), buff);
+        buff[tmp.size()] = '\0';
+
+        emitAsmInput(buff, insn, block, false);
+        //printf("REGNO %d %d\n\n", REGNO (subExpr), ORIGINAL_REGNO (subExpr));
+      } else {
+        printf("ERROR reading register...\n");
+        exit(1);
+      }
+    }
   }
 
   void GCC_PLUGIN_FIXER::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
