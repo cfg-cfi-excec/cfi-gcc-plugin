@@ -57,7 +57,8 @@ struct CFG_FUNCTION_CALL;
   }
 
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    emitAsmInput("CFI_CALL", insn, block, false);
+    //CFI_CALL is explicit here, done automatically by CFI module
+    //emitAsmInput("CFI_CALL", insn, block, false);
 
     rtx body = PATTERN(insn);
     rtx parallel = XVECEXP(body, 0, 0);
