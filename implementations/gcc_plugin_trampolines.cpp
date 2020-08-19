@@ -1,6 +1,6 @@
 #include "gcc_plugin_trampolines.h"
 
-  struct CFG_FUNCTION;
+  struct CFG_SYMBOL;
   struct CFG_EXISTING_FUNCTION;
   struct CFG_FUNCTION_CALL;
 
@@ -58,14 +58,14 @@
         buff[tmp.size()] = '\0';
         insn = emitAsmInput(buff, insn, lastBlock, true);
 
-        for(CFG_FUNCTION call : function_call.calls) {
-          tmp = "LA t0, " + call.function_name;  
+        for(CFG_SYMBOL call : function_call.calls) {
+          tmp = "LA t0, " + call.symbol_name;  
           buff = new char[tmp.size()+1];
           std::copy(tmp.begin(), tmp.end(), buff);
           buff[tmp.size()] = '\0';
           insn = emitAsmInput(buff, insn, lastBlock, true);
           
-          tmp = "BEQ t0, t1, " + call.function_name + "+4";  
+          tmp = "BEQ t0, t1, " + call.symbol_name + "+4";  
           buff = new char[tmp.size()+1];
           std::copy(tmp.begin(), tmp.end(), buff);
           buff[tmp.size()] = '\0';
@@ -164,29 +164,25 @@
     emitAsmInput(buff, insn, block, false);
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
-    //TODO: Set Label
-    unsigned label = 123;
+  void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
+    int label = getLabelForExistingJumpSymbol(file_name, function_name, label_name);
 
-    std::string tmp = "CFICHK " + std::to_string(label);  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, insn, block, false);
+    if (label >= 0) {
+      std::string tmp = "CFICHK " + std::to_string(label);  
+      char *buff = new char[tmp.size()+1];
+      std::copy(tmp.begin(), tmp.end(), buff);
+      buff[tmp.size()] = '\0';
+      emitAsmInput(buff, insn, block, false);
+    }
   }
   
-  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    //TODO: Set Label
-    unsigned label = 123;
+  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    unsigned label = getLabelForIndirectJump(file_name, function_name);
 
     std::string tmp = "CFIPRJ " + std::to_string(label);  
-
     char *buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
-
     emitAsmInput(buff, insn, block, false);
   }
 
@@ -206,6 +202,7 @@
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
         //printFunctionCalls();
+        //printLabelJumps();
       }
     }
   }

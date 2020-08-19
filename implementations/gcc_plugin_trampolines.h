@@ -21,8 +21,8 @@ class GCC_PLUGIN_TRAMPOLINES : public GCC_PLUGIN {
 		void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
 		void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
-		void onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn);
-		void onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);
+		void onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn);
+		void onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
 		
 	private:
 		void init();

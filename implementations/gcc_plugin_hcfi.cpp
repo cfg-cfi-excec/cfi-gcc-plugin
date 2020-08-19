@@ -1,6 +1,6 @@
 #include "gcc_plugin_hcfi.h"
 
-struct CFG_FUNCTION;
+struct CFG_SYMBOL;
 struct CFG_EXISTING_FUNCTION;
 struct CFG_FUNCTION_CALL;
 
@@ -57,11 +57,11 @@ struct CFG_FUNCTION_CALL;
     emitAsmInput(buff, insn, block, false);
   }
 
-  void GCC_PLUGIN_HCFI::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
 
   }
   
-  void GCC_PLUGIN_HCFI::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
 
   }
 

@@ -30,9 +30,9 @@ const struct pass_data cfi_plugin_pass_data = {
 		.todo_flags_finish = 0,
 };
 
-struct CFG_FUNCTION {
+struct CFG_SYMBOL {
     std::string file_name;
-    std::string function_name;
+    std::string symbol_name;
 };
 
 struct CFG_EXISTING_FUNCTION {
@@ -40,7 +40,7 @@ struct CFG_EXISTING_FUNCTION {
     std::string function_name;
     std::string cmd_check_label;
     int label;
-    std::vector<CFG_FUNCTION> called_by;
+    std::vector<CFG_SYMBOL> called_by;
 };
 
 struct CFG_FUNCTION_CALL {
@@ -49,7 +49,14 @@ struct CFG_FUNCTION_CALL {
     int line_number;
     int offset;
     int label;
-    std::vector<CFG_FUNCTION> calls;
+    std::vector<CFG_SYMBOL> calls;
+};
+
+struct CFG_LABEL_JUMP {
+    std::string file_name;
+    std::string function_name;
+    int label;
+    std::vector<CFG_SYMBOL> jumps_to;
 };
 
 class GCC_PLUGIN : public rtl_opt_pass{
@@ -72,8 +79,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 		virtual void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 		virtual void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
-		virtual void onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) = 0;
-		virtual void onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
+		virtual void onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) = 0;
+		virtual void onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) = 0;
 
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
@@ -93,15 +100,20 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void readConfigFile(char * file_name);
 		void prinExistingFunctions();
 		void printFunctionCalls();
+		void printLabelJumps();
 		std::vector<CFG_EXISTING_FUNCTION> getExistingFunctions();
 		std::vector<CFG_FUNCTION_CALL> getIndirectFunctionCalls();
+		std::vector<CFG_LABEL_JUMP> getIndirectLabelJumps();
 		int getLabelForExistingFunction(std::string function_name, std::string file_name);
 		int getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number);
  		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
+		int getLabelForExistingJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
+		int getLabelForIndirectJump(std::string file_name, std::string function_name);
 
 	private:
 		std::vector<CFG_EXISTING_FUNCTION> existing_functions;
 		std::vector<CFG_FUNCTION_CALL> function_calls;
+		std::vector<CFG_LABEL_JUMP> label_jumps;
 
 };
 

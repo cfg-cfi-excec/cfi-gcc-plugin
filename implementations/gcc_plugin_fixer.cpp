@@ -1,6 +1,6 @@
 #include "gcc_plugin_fixer.h"
 
-struct CFG_FUNCTION;
+struct CFG_SYMBOL;
 struct CFG_EXISTING_FUNCTION;
 struct CFG_FUNCTION_CALL;
 
@@ -14,7 +14,7 @@ struct CFG_FUNCTION_CALL;
     if (function_name.compare("main") == 0) {
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
-        for(CFG_FUNCTION call : function_call.calls) {
+        for(CFG_SYMBOL call : function_call.calls) {
           //printf("Function %s calls %s at %d\n", function_call.function_name.c_str(), call.function_name.c_str(), function_call.offset);
           std::string tmp = "CFI_MATLD_CALLER " + function_call.function_name + "+" + std::to_string(function_call.offset);  
 
@@ -24,7 +24,7 @@ struct CFG_FUNCTION_CALL;
 
           emitAsmInput(buff, firstInsn, firstBlock, false);
           
-          tmp = "CFI_MATLD_CALLEE " + call.function_name;  
+          tmp = "CFI_MATLD_CALLEE " + call.symbol_name;  
 
           buff = new char[tmp.size()+1];
           std::copy(tmp.begin(), tmp.end(), buff);
@@ -106,11 +106,11 @@ struct CFG_FUNCTION_CALL;
     }
   }
 
-  void GCC_PLUGIN_FIXER::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
 
   }
   
-  void GCC_PLUGIN_FIXER::onIndirectJump(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
 
   }
 
