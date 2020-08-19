@@ -69,7 +69,12 @@
           insn = emitAsmInput(buff, insn, lastBlock, true);          
         }
 
-        //TODO: add else-branch for final exception (if none of the BEQs hit)
+        // This is the "else-branch": if we arrive here, there is a CFI violation
+        tmp = "CFIRET 0xFFFF";  
+        buff = new char[tmp.size()+1];
+        std::copy(tmp.begin(), tmp.end(), buff);
+        buff[tmp.size()] = '\0';
+        emitAsmInput(buff, insn, lastBlock, true);
       }
     } 
   }
@@ -106,31 +111,8 @@
 
   void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
-    unsigned label = readLabelFromTmpFile();  
-    std::string tmp = "CFIBR " + std::to_string(label);  
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    emitAsmInput(buff, insn, block, false);
+    unsigned label = readLabelFromTmpFile(); 
     
-    unsigned labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-    tmp = "CFIPRC " + std::to_string(labelPRC);  
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    emitAsmInput(buff, insn, block, false);
-
-    tmp = "CFIRET " + std::to_string(label);  
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    rtx_insn *tmpInsn = NEXT_INSN(insn);
-    while (NOTE_P(tmpInsn)) {
-      tmpInsn = NEXT_INSN(tmpInsn);
-    }
-    emitAsmInput(buff, tmpInsn, block, false);
-
-    // copy target of indirect jump to register t1
     std::string regName = "";
 
     switch (REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0))) {
@@ -147,7 +129,25 @@
       default: exit(1);
     };
 
-    tmp = "add t1, " + regName + ", zero";  
+    std::string tmp = "CFIRET " + std::to_string(label);  
+    char *buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+    tmpInsn = emitAsmInput(buff, tmpInsn, block, false);
+
+    // restore target register of indirect branch again
+    tmp = "add " + regName + ", t1, zero"; 
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    emitAsmInput(buff, tmpInsn, block, false);
+
+    // copy target of indirect jump to register t1
+    tmp = "add t1, " + regName + ", zero"; 
     buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
@@ -158,7 +158,20 @@
     buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
-    emitAsmInput(buff, insn, block, false);
+    insn = emitAsmInput(buff, insn, block, false);
+     
+    tmp = "CFIBR " + std::to_string(label);  
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    insn = emitAsmInput(buff, insn, block, true);
+    
+    unsigned labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
+    tmp = "CFIPRC " + std::to_string(labelPRC);  
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    emitAsmInput(buff, insn, block, true);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {

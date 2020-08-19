@@ -485,10 +485,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               token.erase(0, pos + delimiter_entry.length());
               token_name = token;
 
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_function.calls.push_back(tmp);
+              if (!token_file.empty() && !token_name.empty()) {
+                CFG_SYMBOL tmp;
+                tmp.file_name = token_file;
+                tmp.symbol_name = token_name;
+                cfg_function.calls.push_back(tmp);
+            }
           }
 
           if (line.length() > 0) {
@@ -497,10 +499,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               line.erase(0, pos + delimiter_entry.length());
               token_name = line;
 
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_function.calls.push_back(tmp);
+              if (!token_file.empty() && !token_name.empty()) {
+                CFG_SYMBOL tmp;
+                tmp.file_name = token_file;
+                tmp.symbol_name = token_name;
+                cfg_function.calls.push_back(tmp);
+              }
           }
 
           function_calls.push_back(cfg_function);
@@ -536,10 +540,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               token.erase(0, pos + delimiter_entry.length());
               token_name = token;
 
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_label_jump.jumps_to.push_back(tmp);
+              if (!token_file.empty() && !token_name.empty()) {
+                CFG_SYMBOL tmp;
+                tmp.file_name = token_file;
+                tmp.symbol_name = token_name;
+                cfg_label_jump.jumps_to.push_back(tmp);
+              }
           }
 
           if (line.length() > 0) {
@@ -548,10 +554,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               line.erase(0, pos + delimiter_entry.length());
               token_name = line;
 
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_label_jump.jumps_to.push_back(tmp);
+              if (!token_file.empty() && !token_name.empty()) {
+                CFG_SYMBOL tmp;
+                tmp.file_name = token_file;
+                tmp.symbol_name = token_name;
+                cfg_label_jump.jumps_to.push_back(tmp);
+              }
           }
 
           label_jumps.push_back(cfg_label_jump);
