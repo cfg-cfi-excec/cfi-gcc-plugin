@@ -325,15 +325,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     tmp.close();
   }
 
-  void GCC_PLUGIN::prinExistingFunctions() {
-    for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
-      std::cout << "FUNCTION: " << existing_function.function_name << " (" << existing_function.file_name << ")" << '\n';
-      for(CFG_SYMBOL called_by : existing_function.called_by) {
-        std::cout << "    called by: " << called_by.symbol_name << " (" << called_by.file_name << ")" << '\n';
-      }
-    }
-  }
-
   void GCC_PLUGIN::printFunctionCalls() {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       std::cout << "CALL (indirect call): " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
@@ -352,7 +343,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
   }
 
-  int GCC_PLUGIN::getLabelForExistingJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name) {
+  int GCC_PLUGIN::getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name) {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
       if (label_jump.file_name.compare(file_name) == 0) {
         if (label_jump.function_name.compare(function_name) == 0) {
@@ -365,7 +356,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    printf("NOT FOUND: %s -- %s -- %s \n\n", function_name.c_str(), symbol_name.c_str(), file_name.c_str());
+    printf("NOT FOUND (getLabelForIndirectJumpSymbol): %s -- %s -- %s \n\n", function_name.c_str(), symbol_name.c_str(), file_name.c_str());
 
     return -1;
   }
@@ -379,41 +370,21 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    printf("NOT FOUND: %s -- %s \n\n", file_name.c_str(), function_name.c_str());
+    printf("NOT FOUND (getLabelForIndirectJump): %s -- %s \n\n", file_name.c_str(), function_name.c_str());
 
     return -1;
   }
 
-  int GCC_PLUGIN::getLabelForExistingFunction(std::string function_name, std::string file_name) {
-    for(CFG_EXISTING_FUNCTION existing_function : existing_functions) {
-      if (existing_function.file_name.compare(file_name) == 0) {
-        if (existing_function.function_name.compare(function_name) == 0) {
-          return existing_function.label;
-        }
-      }
-    }
-
-    printf("NOT FOUND: %s -- %s \n\n", function_name.c_str(), file_name.c_str());
-
-    return -1;
-  }
-
-  int GCC_PLUGIN::getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number) {
+  int GCC_PLUGIN::getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name) {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       if (function_call.file_name.compare(file_name) == 0) {
         if (function_call.function_name.compare(function_name) == 0) {
-          if (function_call.line_number == line_number) {
-            // possible call targets for this call in function_call.calls
-            if (function_call.calls.size() > 0) { 
-              // assume all functions in calls vector have the same label
-              CFG_SYMBOL tmp = function_call.calls.front();
-
-              return getLabelForExistingFunction(tmp.symbol_name, tmp.file_name);
-            }
-          }
+          return function_call.label;
         }
       }
     }
+
+    printf("NOT FOUND (getLabelForIndirectlyCalledFunction): %s -- %s \n\n", function_name.c_str(), file_name.c_str());
 
     return -1;
   }
@@ -431,10 +402,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
     return -1;
   }
-	
-  std::vector<CFG_EXISTING_FUNCTION> GCC_PLUGIN::getExistingFunctions() {
-    return existing_functions;
-  }
 
   std::vector<CFG_FUNCTION_CALL> GCC_PLUGIN::getIndirectFunctionCalls() {
     return function_calls;
@@ -447,11 +414,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   void GCC_PLUGIN::readConfigFile(char * filename) {
     std::ifstream input( filename );
 
-    std::string allowed_calls_title = "# allowed calls";
     std::string calls_title = "# indirect calls";
     std::string jumps_title = "# indirect jumps";
 
-    bool section_allowed_calls = false;
     bool section_calls = false;
     bool section_jumps = false;
 
@@ -464,72 +429,15 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       pos = 0;
       //std::cout << "LINE READ: " << line << std::endl;
 
-      if (line.find(allowed_calls_title) != std::string::npos) {
-        section_allowed_calls = true;
-        section_jumps = false;
-        section_calls = false;
-      } else if (line.find(calls_title) != std::string::npos) {
-        section_allowed_calls = false;
+      if (line.find(calls_title) != std::string::npos) {
         section_jumps = false;
         section_calls = true;
       } else if (line.find(jumps_title) != std::string::npos) {
-        section_allowed_calls = false;
         section_jumps = true;
         section_calls = false;
       } else if (line.length() > 0) {
-        if (section_allowed_calls) {
-          // extract file name
-          pos = line.find(delimiter);
-          file_name = line.substr(0, pos);
-          line.erase(0, pos + delimiter.length());
 
-          // extract function name
-          pos = line.find(delimiter);
-          function_name = line.substr(0, pos);
-          line.erase(0, pos + delimiter.length());
-
-          // extract label
-          pos = line.find(delimiter);
-          label = line.substr(0, pos-1);
-          line.erase(0, pos + delimiter.length());
-
-          CFG_EXISTING_FUNCTION cfg_function;
-          cfg_function.file_name = file_name;
-          cfg_function.function_name = function_name;
-          cfg_function.label = std::stoi(label);
-
-          // extract allowed callers of this function
-          while ((pos = line.find(delimiter)) != std::string::npos) {
-              token = line.substr(0, pos);
-              line.erase(0, pos + delimiter.length());
-
-              pos = token.find(delimiter_entry);
-              token_file = token.substr(0, pos);
-              token.erase(0, pos + delimiter_entry.length());
-              token_name = token;
-
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_function.called_by.push_back(tmp);
-          }
-
-          if (line.length() > 0) {
-              pos = line.find(delimiter_entry);
-              token_file = line.substr(0, pos);
-              line.erase(0, pos + delimiter_entry.length());
-              token_name = line;
-
-              CFG_SYMBOL tmp;
-              tmp.file_name = token_file;
-              tmp.symbol_name = token_name;
-              cfg_function.called_by.push_back(tmp);
-          }
-
-          existing_functions.push_back(cfg_function);
-
-        } else if (section_calls) {
-
+        if (section_calls) {
           // extract file name
           pos = line.find(delimiter);
           file_name = line.substr(0, pos);

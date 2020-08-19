@@ -35,14 +35,6 @@ struct CFG_SYMBOL {
     std::string symbol_name;
 };
 
-struct CFG_EXISTING_FUNCTION {
-    std::string file_name;
-    std::string function_name;
-    std::string cmd_check_label;
-    int label;
-    std::vector<CFG_SYMBOL> called_by;
-};
-
 struct CFG_FUNCTION_CALL {
     std::string file_name;
     std::string function_name;
@@ -98,20 +90,16 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void writeLabelToTmpFile(unsigned label);
 		unsigned readLabelFromTmpFile();
 		void readConfigFile(char * file_name);
-		void prinExistingFunctions();
 		void printFunctionCalls();
 		void printLabelJumps();
-		std::vector<CFG_EXISTING_FUNCTION> getExistingFunctions();
 		std::vector<CFG_FUNCTION_CALL> getIndirectFunctionCalls();
 		std::vector<CFG_LABEL_JUMP> getIndirectLabelJumps();
-		int getLabelForExistingFunction(std::string function_name, std::string file_name);
-		int getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number);
+		int getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name);
  		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
-		int getLabelForExistingJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
+		int getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
 		int getLabelForIndirectJump(std::string file_name, std::string function_name);
 
 	private:
-		std::vector<CFG_EXISTING_FUNCTION> existing_functions;
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;
 

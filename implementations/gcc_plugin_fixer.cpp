@@ -1,9 +1,5 @@
 #include "gcc_plugin_fixer.h"
 
-struct CFG_SYMBOL;
-struct CFG_EXISTING_FUNCTION;
-struct CFG_FUNCTION_CALL;
-
   GCC_PLUGIN_FIXER::GCC_PLUGIN_FIXER(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
       : GCC_PLUGIN(ctxt, arguments, argcounter) {
     init();

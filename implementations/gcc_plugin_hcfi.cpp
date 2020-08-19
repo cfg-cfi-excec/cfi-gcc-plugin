@@ -1,9 +1,5 @@
 #include "gcc_plugin_hcfi.h"
 
-struct CFG_SYMBOL;
-struct CFG_EXISTING_FUNCTION;
-struct CFG_FUNCTION_CALL;
-
   GCC_PLUGIN_HCFI::GCC_PLUGIN_HCFI(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
       : GCC_PLUGIN(ctxt, arguments, argcounter) {
     init();
@@ -12,7 +8,7 @@ struct CFG_FUNCTION_CALL;
   void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
-      int label = getLabelForExistingFunction(function_name, file_name);
+      int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
       //printf("LABEL: %d \n\n\n", label);
       std::string tmp = "CHECKLABEL " + std::to_string(label);  
@@ -47,7 +43,7 @@ struct CFG_FUNCTION_CALL;
   }
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    int label = getLabelForFunctionCall(function_name, file_name, line_number);
+    int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     std::string tmp = "SETPCLABEL " + std::to_string(label);  
 
     char *buff = new char[tmp.size()+1];

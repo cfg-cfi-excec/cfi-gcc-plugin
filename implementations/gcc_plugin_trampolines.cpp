@@ -1,9 +1,5 @@
 #include "gcc_plugin_trampolines.h"
 
-  struct CFG_SYMBOL;
-  struct CFG_EXISTING_FUNCTION;
-  struct CFG_FUNCTION_CALL;
-
   GCC_PLUGIN_TRAMPOLINES::GCC_PLUGIN_TRAMPOLINES(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
       : GCC_PLUGIN(ctxt, arguments, argcounter) {
     init();
@@ -12,16 +8,17 @@
   void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
-      int label = getLabelForExistingFunction(function_name, file_name);
+      int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
-      //printf("LABEL: %d \n\n\n", label);
-      std::string tmp = "CFICHK " + std::to_string(label);  
+      if (label >= 0) {
+        std::string tmp = "CFICHK " + std::to_string(label);  
 
-      char *buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
+        char *buff = new char[tmp.size()+1];
+        std::copy(tmp.begin(), tmp.end(), buff);
+        buff[tmp.size()] = '\0';
 
-      emitAsmInput(buff, firstInsn, firstBlock, false);
+        emitAsmInput(buff, firstInsn, firstBlock, false);
+      }
     }
   }
 
@@ -165,7 +162,7 @@
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
-    int label = getLabelForExistingJumpSymbol(file_name, function_name, label_name);
+    int label = getLabelForIndirectJumpSymbol(file_name, function_name, label_name);
 
     if (label >= 0) {
       std::string tmp = "CFICHK " + std::to_string(label);  
@@ -200,9 +197,8 @@
         std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
-        //prinExistingFunctions();
-        //printFunctionCalls();
-        //printLabelJumps();
+        printFunctionCalls();
+        printLabelJumps();
       }
     }
   }
