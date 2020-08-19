@@ -23,84 +23,58 @@
 
       emitAsmInput(buff, firstInsn, firstBlock, false);
     }
-    
-    /*unsigned label = 123;
-
-    std::string tmp = "CFIBR " + std::to_string(label);  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, firstInsn, firstBlock, false);*/
-
-/*
-    rtx_code_label *new_label = gen_label_rtx ();
-    rtx_insn* label = emit_label (new_label);
-
-    debug_rtx(label);
-    rtx_insn* jump =  emit_jump_insn (gen_jump  (label));
-    debug_rtx(jump);
-
-    basic_block new_bb = create_basic_block (label, jump, firstBlock);
-    new_bb->aux = firstBlock->aux;
-    new_bb->count = firstBlock->count;
-    firstBlock->aux = new_bb;
-    emit_barrier_after_bb (new_bb);
-    make_single_succ_edge (new_bb, firstBlock, 0);*/
-
-
-
-    //emitInsn(jump, firstInsn, firstBlock, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    /*unsigned label = 123;
-
-    std::string tmp = "CFIREC " + std::to_string(label);  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, firstInsn, firstBlock, false);*/
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-    
     //This Jump-Approach actually works:
     /*
-    rtx_insn* label = emitCodeLabel(1234, lastInsn, lastBlock, false);
+    rtx_insn* label = emitCodeLabel(lastInsn, lastBlock, false);
 	  rtx_insn* jump =  emit_jump_insn (gen_jump  (label));
    
     JUMP_LABEL(jump) = label;
 	  LABEL_NUSES (label)++;
  	  emit_barrier ();
     */
-
-
-    //This code works for generating trampolines:
-    /*
-    std::string tmp = "J functionWithReturnValueWithArgument+4";  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    rtx_insn *insn = emitAsmInput(buff, lastInsn, lastBlock, true);
-    
-    tmp = "CFICHK " + std::to_string(42);  
-
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, insn, lastBlock, false);
-    */
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_TRAMPOLINES::onFunctionExit(std::string file_name, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
+    //Generate Trampolines for each indirect call in this function
+    std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
 
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      if (function_call.function_name.compare(function_name) == 0) {
+        std::string tmp = "_trampolines_" + std::string(function_name) + "_"  + std::to_string(function_call.line_number) + ":"; 
+        char *buff = new char[tmp.size()+1];
+        std::copy(tmp.begin(), tmp.end(), buff);
+        buff[tmp.size()] = '\0';
+        rtx_insn *insn = emitAsmInput(buff, lastInsn, lastBlock, true);
+
+        tmp = "CFICHK " + std::to_string(function_call.label);  
+        buff = new char[tmp.size()+1];
+        std::copy(tmp.begin(), tmp.end(), buff);
+        buff[tmp.size()] = '\0';
+        insn = emitAsmInput(buff, insn, lastBlock, true);
+
+        for(CFG_FUNCTION call : function_call.calls) {
+          tmp = "LA t0, " + call.function_name;  
+          buff = new char[tmp.size()+1];
+          std::copy(tmp.begin(), tmp.end(), buff);
+          buff[tmp.size()] = '\0';
+          insn = emitAsmInput(buff, insn, lastBlock, true);
+          
+          tmp = "BEQ t0, t1, " + call.function_name + "+4";  
+          buff = new char[tmp.size()+1];
+          std::copy(tmp.begin(), tmp.end(), buff);
+          buff[tmp.size()] = '\0';
+          insn = emitAsmInput(buff, insn, lastBlock, true);          
+        }
+
+        //TODO: add else-branch for final exception (if none of the BEQs hit)
+      }
+    } 
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -133,50 +107,61 @@
     onDirectFunctionCall(tree, fName, block, insn);
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile();  
-
     std::string tmp = "CFIBR " + std::to_string(label);  
-
     char *buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
-
     emitAsmInput(buff, insn, block, false);
     
-    unsigned labelPRC = getLabelForFunctionCall(function_name, file_name, line_number);
+    unsigned labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     tmp = "CFIPRC " + std::to_string(labelPRC);  
-
     buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
-
     emitAsmInput(buff, insn, block, false);
 
     tmp = "CFIRET " + std::to_string(label);  
-
     buff = new char[tmp.size()+1];
     std::copy(tmp.begin(), tmp.end(), buff);
     buff[tmp.size()] = '\0';
-
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
     }
-
     emitAsmInput(buff, tmpInsn, block, false);
-    
-    //printf("\nasdf###########################################\n");
-    //debug_rtx(insn);
-    //printf("\n###########################################\n");
 
-   // rtx_insn* label = emitCodeLabel(1234, insn, block, false);
-	  //rtx_insn* jump =  emit_jump_insn (gen_jump  (label));
-   
-   // JUMP_LABEL(insn) = label;
-	 // LABEL_NUSES (label)++;
+    // copy target of indirect jump to register t1
+    std::string regName = "";
 
+    switch (REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0))) {
+      case 18: regName = "s2"; break;
+      case 19: regName = "s3"; break;
+      case 20: regName = "s4"; break;
+      case 21: regName = "s5"; break;
+      case 22: regName = "s6"; break;
+      case 23: regName = "s7"; break;
+      case 24: regName = "s8"; break;
+      case 25: regName = "s9"; break;
+      case 26: regName = "s10"; break;
+      case 27: regName = "s11"; break;
+      default: exit(1);
+    };
+
+    tmp = "add t1, " + regName + ", zero";  
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    emitAsmInput(buff, insn, block, false);
+
+    // re-route jump: write address of trampoline to register
+    tmp = "la " + regName + ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number);  
+    buff = new char[tmp.size()+1];
+    std::copy(tmp.begin(), tmp.end(), buff);
+    buff[tmp.size()] = '\0';
+    emitAsmInput(buff, insn, block, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(const tree_node *tree, char *fName, const char *label_name, basic_block block, rtx_insn *insn) {

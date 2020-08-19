@@ -11,10 +11,12 @@
 #include "gcc-plugin.h"
 #include <context.h>
 #include <basic-block.h>
+#include <df.h>
 #include <rtl.h>
 #include <tree-pass.h>
 #include <tree.h>
 #include <print-tree.h>
+//#include <stringpool.h>
 
 const struct pass_data cfi_plugin_pass_data = {
 		.type = RTL_PASS,
@@ -46,6 +48,7 @@ struct CFG_FUNCTION_CALL {
     std::string function_name;
     int line_number;
     int offset;
+    int label;
     std::vector<CFG_FUNCTION> calls;
 };
 
@@ -63,7 +66,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) = 0;
 		virtual void onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) = 0;
 		virtual void onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
-		virtual void onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
+		virtual void onFunctionExit(std::string file_name, char *fName, basic_block lastBlock, rtx_insn *lastInsn) = 0;
 		virtual void onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
 		virtual void onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn)  = 0;
 		virtual void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) = 0;
@@ -94,6 +97,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		std::vector<CFG_FUNCTION_CALL> getIndirectFunctionCalls();
 		int getLabelForExistingFunction(std::string function_name, std::string file_name);
 		int getLabelForFunctionCall(std::string function_name, std::string file_name, int line_number);
+ 		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
 
 	private:
 		std::vector<CFG_EXISTING_FUNCTION> existing_functions;

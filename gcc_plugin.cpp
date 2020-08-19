@@ -116,7 +116,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return insn;
   }
 
-  /**
+ /**
   * Emits: .codeLabel
   */
   rtx_insn* GCC_PLUGIN::emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after){
@@ -286,11 +286,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           }
         }
 
-/*
+
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
           rtx_insn* lastInsn = lastRealINSN(bb);
-          onFunctionExit(funTree, function_name, bb, lastInsn);
-        } */
+          onFunctionExit(LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name, bb, lastInsn);
+        } 
       }
 
       if (recursiveFunction) {
@@ -365,12 +365,26 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
         if (function_call.function_name.compare(function_name) == 0) {
           if (function_call.line_number == line_number) {
             // possible call targets for this call in function_call.calls
-            if (function_call.calls.size() > 0) {
+            if (function_call.calls.size() > 0) { 
               // assume all functions in calls vector have the same label
               CFG_FUNCTION tmp = function_call.calls.front();
 
               return getLabelForExistingFunction(tmp.function_name, tmp.file_name);
             }
+          }
+        }
+      }
+    }
+
+    return -1;
+  }
+
+  int GCC_PLUGIN::getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number) {
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      if (function_call.file_name.compare(file_name) == 0) {
+        if (function_call.function_name.compare(function_name) == 0) {
+          if (function_call.line_number == line_number) {
+            return function_call.label;
           }
         }
       }
@@ -477,12 +491,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
           // extract line_number and offset
           pos = line.find(delimiter);
-          line_number_with_offset = line.substr(0, pos-1);
+          line_number_with_offset = line.substr(0, pos);
           line.erase(0, pos + delimiter.length());
 
           pos = line_number_with_offset.find(":");
           if (pos > 0) {
-            line_number = line_number_with_offset.substr(0, pos-1);
+            line_number = line_number_with_offset.substr(0, pos);
             line_number_with_offset.erase(0, pos + delimiter.length());
 
             offset = line_number_with_offset;
@@ -490,12 +504,18 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             line_number = line_number_with_offset;
           }
 
+          // extract call label
+          pos = line.find(delimiter);
+          label = line.substr(0, pos-1);
+          line.erase(0, pos + delimiter.length());
+
           CFG_FUNCTION_CALL cfg_function;
           cfg_function.file_name = file_name;
           cfg_function.function_name = function_name;
           cfg_function.line_number = std::stoi(line_number);
           cfg_function.offset = std::stoi(offset);
-          
+          cfg_function.label = std::stoi(label);
+
           // extract possible function calls
           while ((pos = line.find(delimiter)) != std::string::npos) {
               token = line.substr(0, pos);

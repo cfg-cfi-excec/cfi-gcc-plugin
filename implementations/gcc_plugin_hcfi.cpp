@@ -37,7 +37,7 @@ struct CFG_FUNCTION_CALL;
     }
   }
 
-  void GCC_PLUGIN_HCFI::onFunctionExit(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionExit(std::string file_name, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
     
   }
 
