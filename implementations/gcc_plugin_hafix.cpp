@@ -49,7 +49,7 @@
     emitAsmInput(buff, lastInsn, lastBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onFunctionExit(std::string file_name, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionExit(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
 
   }
 
