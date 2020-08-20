@@ -79,12 +79,12 @@
     generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
     // increase stack pointer
     insn = generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
-    // push old register content to stack
-    insn = generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, true);
     // add CFIBR instruction (for backward edge protection)
     insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, true);
     
     if (labelPRC >= 0) {
+      // push old register content to stack
+      generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
       // re-route jump: write address of trampoline to register
       generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
       // add CFIPRC instruction

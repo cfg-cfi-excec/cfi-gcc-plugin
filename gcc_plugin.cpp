@@ -422,7 +422,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    printf("NOT FOUND (getLabelForIndirectJump): %s -- %s \n\n", file_name.c_str(), function_name.c_str());
+    printf("NO LABEL FOUND (getLabelForIndirectJump): %s -- %s \n\n", file_name.c_str(), function_name.c_str());
 
     return -1;
   }
@@ -430,13 +430,15 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   int GCC_PLUGIN::getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name) {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       if (function_call.file_name.compare(file_name) == 0) {
-        if (function_call.function_name.compare(function_name) == 0) {
-          return function_call.label;
+        for(CFG_SYMBOL cfg_symbol : function_call.calls) {
+          if (cfg_symbol.symbol_name.compare(function_name) == 0) {
+            return function_call.label;
+          }
         }
       }
     }
 
-    printf("NOT FOUND (getLabelForIndirectlyCalledFunction): %s -- %s \n\n", function_name.c_str(), file_name.c_str());
+    printf("NO LABEL FOUND (getLabelForIndirectlyCalledFunction): %s -- %s \n\n", function_name.c_str(), file_name.c_str());
 
     return -1;
   }
