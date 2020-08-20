@@ -80,6 +80,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
 		rtx_insn* firstRealINSN(basic_block bb);
 		rtx_insn* lastRealINSN(basic_block bb);
+		basic_block lastRealBlockInFunction();
 		rtx createConstInt(int number);
 	 	bool findCode(rtx expr, rtx_code code);
 		bool isCall(rtx_insn* expr);

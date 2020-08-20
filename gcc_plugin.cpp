@@ -165,6 +165,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }     
   }
 
+  basic_block GCC_PLUGIN::lastRealBlockInFunction() {
+    return EXIT_BLOCK_PTR_FOR_FN(cfun)->prev_bb;
+  }
+
   unsigned int GCC_PLUGIN::execute(function * fun) {    
     const_tree funTree = get_base_address(current_function_decl);
 	  char *function_name = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
