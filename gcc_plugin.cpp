@@ -377,6 +377,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     tmp.close();
   }
 
+  void GCC_PLUGIN::printIndirectlyCalledFunctions() {
+    for(CFG_SYMBOL cfg_symbol : indirectly_called_functions) {
+      std::cout << "Indirectly called function: " << cfg_symbol.symbol_name << " (" << cfg_symbol.file_name << ") with label " << std::to_string(cfg_symbol.label) << '\n';
+    }
+  }
+
   void GCC_PLUGIN::printFunctionCalls() {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       std::cout << "CALL (indirect call): " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
@@ -428,15 +434,14 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   }
 
   int GCC_PLUGIN::getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name) {
-    for(CFG_FUNCTION_CALL function_call : function_calls) {
-      if (function_call.file_name.compare(file_name) == 0) {
-        for(CFG_SYMBOL cfg_symbol : function_call.calls) {
-          if (cfg_symbol.symbol_name.compare(function_name) == 0) {
-            return function_call.label;
-          }
+    for(CFG_SYMBOL cfg_symbol : indirectly_called_functions) {
+      if (cfg_symbol.file_name.compare(file_name) == 0) {
+        if (cfg_symbol.symbol_name.compare(function_name) == 0) {
+          return cfg_symbol.label;
         }
       }
     }
+
 
     printf("NO LABEL FOUND (getLabelForIndirectlyCalledFunction): %s -- %s \n\n", function_name.c_str(), file_name.c_str());
 
@@ -473,11 +478,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       exit(1);
     }
 
+    std::string indirectly_called_functions_title = "# indirectly called functions";
     std::string calls_title = "# indirect calls";
     std::string jumps_title = "# indirect jumps";
 
     bool section_calls = false;
     bool section_jumps = false;
+    bool section_functions = false;
 
     size_t pos = 0;
     std::string token, token_name, token_file, file_name, function_name, line_number_with_offset, offset, line_number, label;
@@ -490,13 +497,41 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
       if (line.find(calls_title) != std::string::npos) {
         section_jumps = false;
+        section_functions = false;
         section_calls = true;
       } else if (line.find(jumps_title) != std::string::npos) {
         section_jumps = true;
+        section_functions = false;
+        section_calls = false;
+      } else if (line.find(indirectly_called_functions_title) != std::string::npos) {
+        section_jumps = false;
+        section_functions = true;
         section_calls = false;
       } else if (line.length() > 0) {
 
-        if (section_calls) {
+        if (section_functions) {
+          // extract file name
+          pos = line.find(delimiter);
+          file_name = line.substr(0, pos);
+          line.erase(0, pos + delimiter.length());
+
+          // extract function name
+          pos = line.find(delimiter);
+          function_name = line.substr(0, pos);
+          line.erase(0, pos + delimiter.length());
+
+          // extract label
+          pos = line.find(delimiter);
+          label = line.substr(0, pos-1);
+          line.erase(0, pos + delimiter.length());
+
+          CFG_SYMBOL cfg_symbol;
+          cfg_symbol.file_name = file_name;
+          cfg_symbol.symbol_name = function_name;
+          cfg_symbol.label = std::stoi(label);
+
+          indirectly_called_functions.push_back(cfg_symbol);
+        } else if (section_calls) {
           // extract file name
           pos = line.find(delimiter);
           file_name = line.substr(0, pos);

@@ -33,6 +33,7 @@ const struct pass_data cfi_plugin_pass_data = {
 struct CFG_SYMBOL {
     std::string file_name;
     std::string symbol_name;
+	int label;
 };
 
 struct CFG_FUNCTION_CALL {
@@ -97,6 +98,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void readConfigFile(char * file_name);
 		void printFunctionCalls();
 		void printLabelJumps();
+		void printIndirectlyCalledFunctions();
 		std::vector<CFG_FUNCTION_CALL> getIndirectFunctionCalls();
 		std::vector<CFG_LABEL_JUMP> getIndirectLabelJumps();
 		int getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name);
@@ -107,6 +109,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 	private:
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;
+		std::vector<CFG_SYMBOL> indirectly_called_functions;
 
 };
 

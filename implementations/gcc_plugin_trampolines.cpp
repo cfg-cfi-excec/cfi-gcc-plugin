@@ -124,6 +124,7 @@
         readConfigFile(argv[i].value);
         //printFunctionCalls();
         //printLabelJumps();
+        //printIndirectlyCalledFunctions();
       }
     }
   }
