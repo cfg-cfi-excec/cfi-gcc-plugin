@@ -29,7 +29,6 @@
           emitAsmInput(buff, firstInsn, firstBlock, false);
         }
       }
-
     }
   }
   
@@ -42,10 +41,6 @@
     if (function_name.compare("main") != 0) {
       emitAsmInput("CFI_RET", lastInsn, lastBlock, false);
     }
-  }
-
-  void GCC_PLUGIN_FIXER::onFunctionExit(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
@@ -69,57 +64,14 @@
     rtx subExpr = XEXP(mem, 0);
 
     if (((rtx_code)subExpr->code) == REG) {
-      bool validReg = true;
-      std::string regName = "";
+      std::string regName = getRegisterNameForNumber(REGNO(subExpr));
 
-      switch (REGNO(subExpr)) {
-        case 18: regName = "s2"; break;
-        case 19: regName = "s3"; break;
-        case 20: regName = "s4"; break;
-        case 21: regName = "s5"; break;
-        case 22: regName = "s6"; break;
-        case 23: regName = "s7"; break;
-        case 24: regName = "s8"; break;
-        case 25: regName = "s9"; break;
-        case 26: regName = "s10"; break;
-        case 27: regName = "s11"; break;
-        default: validReg = false;
-      };
-
-      if (validReg) {        
-        std::string tmp = "cfi_fwd " + regName;  
-
-        char *buff = new char[tmp.size()+1];
-        std::copy(tmp.begin(), tmp.end(), buff);
-        buff[tmp.size()] = '\0';
-
-        emitAsmInput(buff, insn, block, false);
-        //printf("REGNO %d %d\n\n", REGNO (subExpr), ORIGINAL_REGNO (subExpr));
-      } else {
-        printf("ERROR reading register...\n");
-        exit(1);
-      }
+      std::string tmp = "cfi_fwd " + regName;  
+      char *buff = new char[tmp.size()+1];
+      std::copy(tmp.begin(), tmp.end(), buff);
+      buff[tmp.size()] = '\0';
+      emitAsmInput(buff, insn, block, false);
     }
-  }
-
-  void GCC_PLUGIN_FIXER::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
-
-  }
-  
-  void GCC_PLUGIN_FIXER::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-
-  }
-
-  void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-   
-  }
-
-  void GCC_PLUGIN_FIXER::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-
-  }
-
-  void GCC_PLUGIN_FIXER::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
- 
   }
 
   void GCC_PLUGIN_FIXER::init() {
@@ -138,8 +90,4 @@
   {
     // We do not clone ourselves
     return this;
-  }
-
-	void GCC_PLUGIN_FIXER::onPluginFinished() {
-
   }

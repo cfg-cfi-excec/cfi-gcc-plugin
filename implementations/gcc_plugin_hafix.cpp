@@ -1,9 +1,7 @@
 #include "gcc_plugin_hafix.h"
 
   GCC_PLUGIN_HAFIX::GCC_PLUGIN_HAFIX(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
-      : GCC_PLUGIN(ctxt, arguments, argcounter) {
-    init();
-  }
+      : GCC_PLUGIN(ctxt, arguments, argcounter) {}
 
   void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
@@ -30,14 +28,6 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
-
-  }
-  
-  void GCC_PLUGIN_HAFIX::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-
-  }
-
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
@@ -47,10 +37,6 @@
     buff[tmp.size()] = '\0';
 
     emitAsmInput(buff, lastInsn, lastBlock, false);
-  }
-
-  void GCC_PLUGIN_HAFIX::onFunctionExit(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-
   }
 
   void GCC_PLUGIN_HAFIX::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
@@ -87,18 +73,6 @@
     }
 
     emitAsmInput(buff, tmpInsn, block, false);
-  }
-
-  void GCC_PLUGIN_HAFIX::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Do nothing...
-  }
-
-  void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Do nothing...
-  }
-
-  void GCC_PLUGIN_HAFIX::init() {
-
   }
 
   GCC_PLUGIN_HAFIX *GCC_PLUGIN_HAFIX::clone() {

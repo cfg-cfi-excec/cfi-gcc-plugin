@@ -33,10 +33,6 @@
     }
   }
 
-  void GCC_PLUGIN_HCFI::onFunctionExit(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    
-  }
-
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     emitAsmInput("SETPC", insn, block, false);
     //printf ("    Generating SETPC \n");
@@ -53,14 +49,6 @@
     emitAsmInput(buff, insn, block, false);
   }
 
-  void GCC_PLUGIN_HCFI::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
-
-  }
-  
-  void GCC_PLUGIN_HCFI::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-
-  }
-
   void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(file_name, function_name, block, insn);
   }
@@ -75,26 +63,6 @@
     emitAsmInput("LJCFI", insn, block, false);
     //printf ("    Generating LJCFI \n");
   }
-
-
-  /*
-  // Attribute handler callback
-  static tree handle_user_attribute (tree *node, tree name, tree args, int flags, bool *no_add_attrs) {
-    std::cout << "CALL ATTRI ##############################################################"  << "\n";
-  
-    debug_tree(*node);
-    debug_tree(args);
-
-    return NULL_TREE;
-  }
-
-  // Attribute definition
-  static struct attribute_spec user_attr = { "user", 1, 1, false,  false, false, handle_user_attribute, false };
-
-  static void register_attributes (void *event_data, void *data) {
-    register_attribute (&user_attr);
-  }
-  */
 
   void GCC_PLUGIN_HCFI::init()
   {
@@ -113,8 +81,4 @@
   {
     // We do not clone ourselves
     return this;
-  }
-
-	void GCC_PLUGIN_HCFI::onPluginFinished() {
-
   }
