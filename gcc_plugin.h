@@ -78,6 +78,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
+		rtx_insn* generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* firstRealINSN(basic_block bb);
 		rtx_insn* lastRealINSN(basic_block bb);
 		basic_block lastRealBlockInFunction();

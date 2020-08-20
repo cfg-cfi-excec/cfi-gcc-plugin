@@ -116,6 +116,17 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return insn;
   }
 
+	rtx_insn* GCC_PLUGIN::generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after) {
+    if (!insn.empty()){
+      char *buff = new char[insn.size()+1];
+      std::copy(insn.begin(), insn.end(), buff);
+      buff[insn.size()] = '\0';
+      return emitAsmInput(buff, attachRtx, bb, after);
+    }
+
+    return attachRtx;
+  }
+
  /**
   * Emits: .codeLabel
   */

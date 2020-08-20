@@ -11,13 +11,7 @@
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
       if (label >= 0) {
-        std::string tmp = "CFICHK " + std::to_string(label);  
-
-        char *buff = new char[tmp.size()+1];
-        std::copy(tmp.begin(), tmp.end(), buff);
-        buff[tmp.size()] = '\0';
-
-        emitAsmInput(buff, firstInsn, firstBlock, false);
+        generateAndEmitAsm("CFICHK " + std::to_string(label), firstInsn, firstBlock, false);
       }
     }
   }
@@ -41,46 +35,23 @@
     for(CFG_FUNCTION_CALL function_call : function_calls) {
       if (function_call.function_name.compare(function_name) == 0) {
         if (function_call.line_number == line_number) {
-          std::string tmp = "_trampolines_" + std::string(function_name) + "_"  + std::to_string(function_call.line_number) + ":"; 
-          char *buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-          rtx_insn *insn = emitAsmInput(buff, lastInsn, lastBlock, true);
-
-          tmp = "CFICHK " + std::to_string(function_call.label);  
-          buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-          insn = emitAsmInput(buff, insn, lastBlock, true);
-
+          // generate symbol for trampoline
+          rtx_insn *insn = generateAndEmitAsm("_trampolines_" + std::string(function_name) + "_"  
+            + std::to_string(function_call.line_number) + ":", lastInsn, lastBlock, true);
+          // add CFICHK at the very beginning
+          insn = generateAndEmitAsm("CFICHK " + std::to_string(function_call.label), insn, lastBlock, true);
           // restore original register content
-          tmp = "lw	" + register_name + ",0(sp)";
-          buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-          insn = emitAsmInput(buff, insn, lastBlock, true);
+          insn = generateAndEmitAsm("lw	" + register_name + ",0(sp)", insn, lastBlock, true);
 
           for(CFG_SYMBOL call : function_call.calls) {
-
-            tmp = "LA t0, " + call.symbol_name;  
-            buff = new char[tmp.size()+1];
-            std::copy(tmp.begin(), tmp.end(), buff);
-            buff[tmp.size()] = '\0';
-            insn = emitAsmInput(buff, insn, lastBlock, true);
-            
-            tmp = "BEQ t0, " + register_name + ", " + call.symbol_name + "+4";  
-            buff = new char[tmp.size()+1];
-            std::copy(tmp.begin(), tmp.end(), buff);
-            buff[tmp.size()] = '\0';
-            insn = emitAsmInput(buff, insn, lastBlock, true);          
+            // load symbol address of one possible call target to t0
+            insn = generateAndEmitAsm("LA t0, " + call.symbol_name, insn, lastBlock, true);
+            // compare actual call target with t0
+            insn = generateAndEmitAsm("BEQ t0, " + register_name + ", " + call.symbol_name + "+4", insn, lastBlock, true);        
           }
 
           // This is the "else-branch": if we arrive here, there is a CFI violation
-          tmp = "CFIRET 0xFFFF";  
-          buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-          emitAsmInput(buff, insn, lastBlock, true);
+          generateAndEmitAsm("CFIRET 0xFFFF", insn, lastBlock, true);
 
           break;
         }
@@ -92,26 +63,13 @@
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile();
 
-    std::string tmp = "CFIBR " + std::to_string(label);  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, insn, block, false);
-
-    tmp = "CFIRET " + std::to_string(label);  
-
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
+    generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
 
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
     }
-
-    emitAsmInput(buff, tmpInsn, block, false);
+    generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
@@ -124,53 +82,29 @@
     int labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
 
-    std::string tmp = "CFIRET " + std::to_string(label);  
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
     }
-    emitAsmInput(buff, tmpInsn, block, false);
 
+    // add CFIRET instruction after the indirect JALR
+    generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
     // increase stack pointer
-    tmp = "addi	sp,sp,-4";
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    insn = emitAsmInput(buff, insn, block, false);
-
+    insn = generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
     // push old register content to stack
-    tmp = "sw	" + regName + ",0(sp)";
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    insn = emitAsmInput(buff, insn, block, true);
-
-    tmp = "CFIBR " + std::to_string(label);  
-    buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-    insn = emitAsmInput(buff, insn, block, true);
+    insn = generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, true);
+    // add CFIBR instruction (for backward edge protection)
+    insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, true);
     
     if (labelPRC >= 0) {
       // re-route jump: write address of trampoline to register
-      tmp = "la " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number);  
-      buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-      insn = emitAsmInput(buff, insn, block, false);
-
-      tmp = "CFIPRC " + std::to_string(labelPRC);  
-      buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-      emitAsmInput(buff, insn, block, true);
+      generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
+      // add CFIPRC instruction
+      generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
 
       basic_block lastBlock = lastRealBlockInFunction();
       rtx_insn *lastInsn = lastRealINSN(lastBlock);
-      emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);  
+      emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
     }
   }
 
@@ -178,11 +112,7 @@
     int label = getLabelForIndirectJumpSymbol(file_name, function_name, label_name);
 
     if (label >= 0) {
-      std::string tmp = "CFICHK " + std::to_string(label);  
-      char *buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-      emitAsmInput(buff, insn, block, false);
+      generateAndEmitAsm("CFICHK " + std::to_string(label), insn, block, false);
     }
   }
   
@@ -190,11 +120,7 @@
     int label = getLabelForIndirectJump(file_name, function_name);
 
     if (label >= 0) {
-      std::string tmp = "CFIPRJ " + std::to_string(label);  
-      char *buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-      emitAsmInput(buff, insn, block, false);
+      generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
     }
   }
 
