@@ -16,18 +16,6 @@
     }
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-  // Do nothing...
-  }
-
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
-  // Do nothing...
-  }
-
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionExit(std::string file_name, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-  // Do nothing...
-  }
-
   void GCC_PLUGIN_TRAMPOLINES::emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn) {
     //Generate Trampolines for an indirect call in this function
     std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
@@ -122,14 +110,6 @@
     if (label >= 0) {
       generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
     }
-  }
-
-  void GCC_PLUGIN_TRAMPOLINES::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    // Do nothing...
-  }
-
-  void GCC_PLUGIN_TRAMPOLINES::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    // Do nothing...
   }
 
   void GCC_PLUGIN_TRAMPOLINES::init() {
