@@ -49,18 +49,22 @@ int plugin_init(struct plugin_name_args *plugin_info,
 			if (std::strcmp(implementation, "HCFI") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_HCFI(g, plugin_info->argv, plugin_info->argc);
+				std::cout << "Using CFI Implementation HCFI" << "\n";
 				break;
 			} else if (std::strcmp(implementation, "HAFIX") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_HAFIX(g, plugin_info->argv, plugin_info->argc);
+				std::cout << "Using CFI Implementation HAFIX" << "\n";
 				break;
 			} else if (std::strcmp(implementation, "TRAMPOLINES") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_TRAMPOLINES(g, plugin_info->argv, plugin_info->argc);
+				std::cout << "Using CFI Implementation TRAMPOLINES" << "\n";
 				break;
 			} else if (std::strcmp(implementation, "FIXER") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_FIXER(g, plugin_info->argv, plugin_info->argc);
+				std::cout << "Using CFI Implementation FIXER" << "\n";
 				break;
 			} else {
 				std::cerr << "Invalid CFI Implementation declared (" << implementation << ")\n";

@@ -466,6 +466,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   void GCC_PLUGIN::readConfigFile(char * filename) {
     std::ifstream input( filename );
 
+    if(input.fail()){
+      std::cerr << "CFG file " << filename << " does not exist\n";
+      exit(1);
+    }
+
     std::string calls_title = "# indirect calls";
     std::string jumps_title = "# indirect jumps";
 
