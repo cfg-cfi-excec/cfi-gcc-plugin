@@ -93,6 +93,8 @@
       basic_block lastBlock = lastRealBlockInFunction();
       rtx_insn *lastInsn = lastRealINSN(lastBlock);
       emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
+    } else {
+       printf("\033[31m Warning: NO CFI RULES FOR INDIRECT CALL IN %s:%s:%d \x1b[0m\n",file_name.c_str(), function_name.c_str(), line_number);
     }
   }
 
@@ -109,6 +111,8 @@
 
     if (label >= 0) {
       generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
+    } else {
+       printf("\033[31m Warning: NO CFI RULES FOR INDIRECT JUMP IN %s:%s \x1b[0m\n",file_name.c_str(), function_name.c_str());
     }
   }
 
