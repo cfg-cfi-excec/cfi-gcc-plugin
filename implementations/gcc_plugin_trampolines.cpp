@@ -122,21 +122,7 @@
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile(); 
     int labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-    std::string regName = "";
-
-    switch (REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0))) {
-      case 18: regName = "s2"; break;
-      case 19: regName = "s3"; break;
-      case 20: regName = "s4"; break;
-      case 21: regName = "s5"; break;
-      case 22: regName = "s6"; break;
-      case 23: regName = "s7"; break;
-      case 24: regName = "s8"; break;
-      case 25: regName = "s9"; break;
-      case 26: regName = "s10"; break;
-      case 27: regName = "s11"; break;
-      default: exit(1);
-    };
+    std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
 
     std::string tmp = "CFIRET " + std::to_string(label);  
     char *buff = new char[tmp.size()+1];

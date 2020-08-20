@@ -86,7 +86,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		bool isCall(rtx_insn* expr);
 		bool isReturn(rtx_insn* expr);
 		void printRtxClass(rtx_code code);
-
+		std::string getRegisterNameForNumber(unsigned regno);
+		
 		void clearTmpFile();
 		void writeLabelToTmpFile(unsigned label);
 		unsigned readLabelFromTmpFile();
