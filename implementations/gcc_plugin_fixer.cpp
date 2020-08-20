@@ -5,7 +5,7 @@
     init();
   }
 
-  void GCC_PLUGIN_FIXER::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_FIXER::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     // Load the policy matrix on entry of MAIN
     if (function_name.compare("main") == 0) {
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
@@ -33,8 +33,8 @@
     }
   }
   
-  void GCC_PLUGIN_FIXER::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    onFunctionEntry(file_name, function_name, line_number, firstBlock, firstInsn);
+  void GCC_PLUGIN_FIXER::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
+    onFunctionEntry(file_name, function_name, firstBlock, firstInsn);
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -48,7 +48,7 @@
     
   }
 
-  void GCC_PLUGIN_FIXER::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     emitAsmInput("CFI_CALL", insn, block, false);
   }
 
@@ -110,15 +110,15 @@
 
   }
 
-  void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
    
   }
 
-  void GCC_PLUGIN_FIXER::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
 
   }
 
-  void GCC_PLUGIN_FIXER::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_FIXER::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
  
   }
 

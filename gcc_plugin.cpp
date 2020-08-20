@@ -219,7 +219,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   }
 
   unsigned int GCC_PLUGIN::execute(function * fun) {    
-    const_tree funTree = get_base_address(current_function_decl);
 	  char *function_name = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
     const char *file_name = LOCATION_FILE(INSN_LOCATION (firstRealINSN(single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun)))));
 
@@ -235,7 +234,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
       basic_block firstBb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
       rtx_insn* firstInsn = firstRealINSN(firstBb);
-      onFunctionEntry(file_name, function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), firstBb, firstInsn);
+      onFunctionEntry(file_name, function_name, firstBb, firstInsn);
       //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -285,13 +284,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               //TODO: Is this a sufficient check for setjmp/longjmp?
               if (strcmp(fName, function_name) == 0) {
                 recursiveFunction = true;
-                onRecursiveFunctionCall(funTree, fName, bb, insn);
+                onRecursiveFunctionCall(file_name, function_name, bb, insn);
                 //printf("      onRecursiveFunctionCall \n");
               } else if (strcmp(fName, "setjmp") == 0) {
-                onSetJumpFunctionCall(funTree, fName, bb, insn);
+                onSetJumpFunctionCall(file_name, function_name, bb, insn);
                 printf("      setjmp \n");
               } else if (strcmp(fName, "longjmp") == 0) {
-                onLongJumpFunctionCall(funTree, fName, bb, insn);
+                onLongJumpFunctionCall(file_name, function_name, bb, insn);
                 printf("      longjmp \n");
 
                 //TODO: Find better way to exclude library functions
@@ -301,7 +300,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                   || strcmp(fName, "modf") == 0) {
                 // do nothing
               } else {
-                onDirectFunctionCall(funTree, fName, bb, insn);
+                onDirectFunctionCall(file_name, fName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
                 //printf("%s %s %d: %s\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
               }
@@ -345,7 +344,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
 
       if (recursiveFunction) {
-        onFunctionRecursionEntry(file_name, function_name, LOCATION_LINE(INSN_LOCATION (firstInsn)), firstBb, firstInsn);
+        onFunctionRecursionEntry(file_name, function_name, firstBb, firstInsn);
       }
 
       printf("\x1b[92m--------------------- Plugin fully ran -----------------------\n\x1b[0m");

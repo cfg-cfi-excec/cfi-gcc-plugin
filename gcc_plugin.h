@@ -64,17 +64,17 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		struct plugin_argument *argv;
 
 		// These functions are optionally overwritten in derived classes
-		void onFunctionEntry			(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {}
-		void onFunctionRecursionEntry	(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {}
+		void onFunctionEntry			(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {}
+		void onFunctionRecursionEntry	(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {}
 		void onFunctionReturn			(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {}
 		void onFunctionExit				(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {}
-		void onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {}
-		void onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {}
-		void onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {}
-		void onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {}
-		void onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {}
-		void onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
-		void onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		void onDirectFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		void onIndirectFunctionCall		(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {}
+		void onSetJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
+		void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);

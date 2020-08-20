@@ -5,7 +5,7 @@
     init();
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
@@ -47,7 +47,7 @@
     } 
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_TRAMPOLINES::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile();
 
@@ -60,8 +60,8 @@
     generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    onDirectFunctionCall(tree, fName, block, insn);
+  void GCC_PLUGIN_TRAMPOLINES::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
   void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   

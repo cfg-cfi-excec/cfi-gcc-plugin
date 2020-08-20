@@ -5,7 +5,7 @@
     init();
   }
 
-  void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
@@ -21,8 +21,8 @@
     }
   }
   
-  void GCC_PLUGIN_HCFI::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
-    onFunctionEntry(file_name, function_name, line_number, firstBlock, firstInsn);
+  void GCC_PLUGIN_HCFI::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
+    onFunctionEntry(file_name, function_name, firstBlock, firstInsn);
   }
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -37,7 +37,7 @@
     
   }
 
-  void GCC_PLUGIN_HCFI::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     emitAsmInput("SETPC", insn, block, false);
     //printf ("    Generating SETPC \n");
   }
@@ -61,17 +61,17 @@
 
   }
 
-  void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    onDirectFunctionCall(tree, fName, block, insn);
+  void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
-  void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     //TODO: Set Label propperly
     emitAsmInput("SJCFI 0x42", insn, block, false);
     //printf ("    Generating SJCFI \n");
   }
 
-  void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     emitAsmInput("LJCFI", insn, block, false);
     //printf ("    Generating LJCFI \n");
   }

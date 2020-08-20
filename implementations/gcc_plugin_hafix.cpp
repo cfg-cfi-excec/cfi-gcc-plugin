@@ -5,7 +5,7 @@
     init();
   }
 
-  void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile();
 
@@ -18,7 +18,7 @@
     emitAsmInput(buff, firstInsn, firstBlock, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     unsigned label = readLabelFromTmpFile();
 
     std::string tmp = "CFIREC " + std::to_string(label);  
@@ -53,7 +53,7 @@
 
   }
 
-  void GCC_PLUGIN_HAFIX::onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIRET " + std::to_string(label);  
 
@@ -69,8 +69,8 @@
     emitAsmInput(buff, tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onRecursiveFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
-    onDirectFunctionCall(tree, fName, block, insn);
+  void GCC_PLUGIN_HAFIX::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
   void GCC_PLUGIN_HAFIX::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
@@ -89,11 +89,11 @@
     emitAsmInput(buff, tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_HAFIX::onSetJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     // Do nothing...
   }
 
-  void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     // Do nothing...
   }
 
