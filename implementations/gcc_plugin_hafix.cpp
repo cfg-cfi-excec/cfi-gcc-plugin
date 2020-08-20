@@ -38,7 +38,7 @@
 
   }
 
-  void GCC_PLUGIN_HAFIX::onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     unsigned label = readLabelFromTmpFile();
     std::string tmp = "CFIDEL " + std::to_string(label);  
 

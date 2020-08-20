@@ -13,7 +13,7 @@ class GCC_PLUGIN_HAFIX : public GCC_PLUGIN {
 	protected:
 
 		void onFunctionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn);
-		void onFunctionReturn(const tree_node *tree, char *fName, basic_block lastBlock, rtx_insn *lastInsn);
+		void onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn);
 		void onFunctionRecursionEntry(std::string file_name, std::string function_name, int line_number, basic_block firstBlock, rtx_insn *firstInsn);
 		void onFunctionExit(std::string file_name, char *fName, basic_block lastBlock, rtx_insn *lastInsn);
 		void onDirectFunctionCall(const tree_node *tree, char *fName, basic_block block, rtx_insn *insn);

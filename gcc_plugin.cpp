@@ -315,10 +315,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             if (GET_CODE (ret) == PARALLEL) {
               ret = XVECEXP(ret, 0, 0);
               if (ANY_RETURN_P(ret)) {
-              onFunctionReturn(funTree, function_name, bb, insn);
+              onFunctionReturn(file_name, function_name, bb, insn);
               }
             } else if (ANY_RETURN_P(ret)) {
-              onFunctionReturn(funTree, function_name, bb, insn);
+              onFunctionReturn(file_name, function_name, bb, insn);
             } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
               //It is not possible to extract line number here unfortunately
               onIndirectJump(file_name, function_name, bb, insn);

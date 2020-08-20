@@ -25,9 +25,9 @@
     onFunctionEntry(file_name, function_name, line_number, firstBlock, firstInsn);
   }
 
-  void GCC_PLUGIN_HCFI::onFunctionReturn(const tree_node *tree, char *function_name, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
-    if (strcmp(function_name, "main") != 0) {
+    if (function_name.compare("main") != 0) {
       emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
       //printf ("    Generating CHECKPC \n");
     }
