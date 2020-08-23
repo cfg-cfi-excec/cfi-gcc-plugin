@@ -11,8 +11,7 @@
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
-          generateAndEmitAsm("CFI_MATLD_CALLER _indirect_jump_" + function_call.function_name + "_" 
-            + std::to_string(function_call.line_number) + "+4", firstInsn, firstBlock, false);
+          generateAndEmitAsm("CFI_MATLD_CALLER " + function_call.function_name + " +" + std::to_string(function_call.offset), firstInsn, firstBlock, false);
           generateAndEmitAsm("CFI_MATLD_CALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
@@ -50,10 +49,6 @@
     if (((rtx_code)subExpr->code) == REG) {
       std::string regName = getRegisterNameForNumber(REGNO(subExpr));
       insn = generateAndEmitAsm("cfi_fwd " + regName, insn, block, false);
-
-      // generate symbol so that cfi_matld knows the address of the call instruction
-      generateAndEmitAsm("_indirect_jump_" + function_name + "_"  
-        + std::to_string(line_number) + ":", insn, block, true);
     }
   }
 
