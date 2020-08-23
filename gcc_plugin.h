@@ -40,7 +40,6 @@ struct CFG_FUNCTION_CALL {
     std::string file_name;
     std::string function_name;
     int line_number;
-    int offset;
     int label;
     std::vector<CFG_SYMBOL> calls;
 };

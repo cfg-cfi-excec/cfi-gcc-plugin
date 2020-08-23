@@ -11,22 +11,9 @@
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
-          //printf("Function %s calls %s at %d\n", function_call.function_name.c_str(), call.function_name.c_str(), function_call.offset);
-          std::string tmp = "CFI_MATLD_CALLER " + function_call.function_name + "+" + std::to_string(function_call.offset);  
-
-          char *buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-
-          emitAsmInput(buff, firstInsn, firstBlock, false);
-          
-          tmp = "CFI_MATLD_CALLEE " + call.symbol_name;  
-
-          buff = new char[tmp.size()+1];
-          std::copy(tmp.begin(), tmp.end(), buff);
-          buff[tmp.size()] = '\0';
-
-          emitAsmInput(buff, firstInsn, firstBlock, false);
+          generateAndEmitAsm("CFI_MATLD_CALLER _indirect_jump_" + function_call.function_name + "_" 
+            + std::to_string(function_call.line_number) + "+4", firstInsn, firstBlock, false);
+          generateAndEmitAsm("CFI_MATLD_CALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
     }
@@ -39,18 +26,15 @@
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
     if (function_name.compare("main") != 0) {
-      emitAsmInput("CFI_RET", lastInsn, lastBlock, false);
+      generateAndEmitAsm("CFI_RET", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    emitAsmInput("CFI_CALL", insn, block, false);
+    generateAndEmitAsm("CFI_CALL", insn, block, false);
   }
 
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    //CFI_CALL is explicit here, done automatically by CFI module
-    //emitAsmInput("CFI_CALL", insn, block, false);
-
     rtx body = PATTERN(insn);
     rtx parallel = XVECEXP(body, 0, 0);
     rtx call;
@@ -65,12 +49,11 @@
 
     if (((rtx_code)subExpr->code) == REG) {
       std::string regName = getRegisterNameForNumber(REGNO(subExpr));
+      insn = generateAndEmitAsm("cfi_fwd " + regName, insn, block, false);
 
-      std::string tmp = "cfi_fwd " + regName;  
-      char *buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-      emitAsmInput(buff, insn, block, false);
+      // generate symbol so that cfi_matld knows the address of the call instruction
+      generateAndEmitAsm("_indirect_jump_" + function_name + "_"  
+        + std::to_string(line_number) + ":", insn, block, true);
     }
   }
 
@@ -80,8 +63,9 @@
         std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
-        //prinExistingFunctions();
         //printFunctionCalls();
+        //printLabelJumps();
+        //printIndirectlyCalledFunctions();
       }
     }
   }
