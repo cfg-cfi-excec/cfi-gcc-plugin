@@ -76,19 +76,10 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
 		virtual void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
  
-		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
 		rtx_insn* generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* firstRealINSN(basic_block bb);
 		rtx_insn* lastRealINSN(basic_block bb);
 		basic_block lastRealBlockInFunction();
-		rtx createConstInt(int number);
-	 	bool findCode(rtx expr, rtx_code code);
-		bool isCall(rtx_insn* expr);
-		bool isReturn(rtx_insn* expr);
-		void printRtxClass(rtx_code code);
 		std::string getRegisterNameForNumber(unsigned regno);
 		
 		void clearTmpFile();
@@ -106,6 +97,16 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		int getLabelForIndirectJump(std::string file_name, std::string function_name);
 
 	private:
+		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
+		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
+		rtx_insn* emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after);
+		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
+		rtx createConstInt(int number);
+	 	bool findCode(rtx expr, rtx_code code);
+		bool isCall(rtx_insn* expr);
+		bool isReturn(rtx_insn* expr);
+		void printRtxClass(rtx_code code);		
+
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;
 		std::vector<CFG_SYMBOL> indirectly_called_functions;
