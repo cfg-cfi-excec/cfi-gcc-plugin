@@ -475,7 +475,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
     if(input.fail()){
       std::cerr << "CFG file " << filename << " does not exist\n";
-      exit(1);
     }
 
     std::string indirectly_called_functions_title = "# indirectly called functions";
