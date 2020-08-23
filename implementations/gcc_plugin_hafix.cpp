@@ -42,7 +42,3 @@
     // We do not clone ourselves
     return this;
   }
-  
-	void GCC_PLUGIN_HAFIX::onPluginFinished() {
-    remove("tmp.txt");
-  }
