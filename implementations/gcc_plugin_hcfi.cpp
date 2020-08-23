@@ -10,14 +10,10 @@
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
-      //printf("LABEL: %d \n\n\n", label);
-      std::string tmp = "CHECKLABEL " + std::to_string(label);  
-
-      char *buff = new char[tmp.size()+1];
-      std::copy(tmp.begin(), tmp.end(), buff);
-      buff[tmp.size()] = '\0';
-
-      emitAsmInput(buff, firstInsn, firstBlock, false);
+      // only instrument functions, which are known to be called indirectly
+      if (label >= 0) {
+        generateAndEmitAsm("CHECKLABEL " + std::to_string(label), firstInsn, firstBlock, false);
+      }
     }
   }
   
@@ -28,25 +24,17 @@
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
     if (function_name.compare("main") != 0) {
-      emitAsmInput("CHECKPC", lastInsn, lastBlock, false);
-      //printf ("    Generating CHECKPC \n");
+      generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    emitAsmInput("SETPC", insn, block, false);
-    //printf ("    Generating SETPC \n");
+    generateAndEmitAsm("SETPC", insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-    std::string tmp = "SETPCLABEL " + std::to_string(label);  
-
-    char *buff = new char[tmp.size()+1];
-    std::copy(tmp.begin(), tmp.end(), buff);
-    buff[tmp.size()] = '\0';
-
-    emitAsmInput(buff, insn, block, false);
+    generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
@@ -55,13 +43,11 @@
 
   void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     //TODO: Set Label propperly
-    emitAsmInput("SJCFI 0x42", insn, block, false);
-    //printf ("    Generating SJCFI \n");
+    generateAndEmitAsm("SJCFI 0x42", insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    emitAsmInput("LJCFI", insn, block, false);
-    //printf ("    Generating LJCFI \n");
+    generateAndEmitAsm("LJCFI", insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::init()
