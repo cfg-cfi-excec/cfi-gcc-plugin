@@ -30,6 +30,7 @@
           insn = generateAndEmitAsm("CFICHK " + std::to_string(function_call.label), insn, lastBlock, true);
           // restore original register content
           insn = generateAndEmitAsm("lw	" + register_name + ",0(sp)", insn, lastBlock, true);
+          insn = generateAndEmitAsm("addi	sp,sp,4", insn, lastBlock, true);
 
           for(CFG_SYMBOL call : function_call.calls) {
             // load symbol address of one possible call target to t0
