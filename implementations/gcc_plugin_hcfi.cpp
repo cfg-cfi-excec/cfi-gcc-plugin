@@ -34,7 +34,9 @@
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-    generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
+    if (label >= 0) {
+      generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
+    }
   }
 
   void GCC_PLUGIN_HCFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {

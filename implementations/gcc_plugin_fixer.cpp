@@ -25,7 +25,7 @@
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function entry of MAIN
     if (function_name.compare("main") != 0) {
-      generateAndEmitAsm("CFI_RET", lastInsn, lastBlock, false);
+      generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
   }
 

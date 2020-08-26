@@ -106,7 +106,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 	 	bool findCode(rtx expr, rtx_code code);
 		bool isCall(rtx_insn* expr);
 		bool isReturn(rtx_insn* expr);
-		void printRtxClass(rtx_code code);		
+		void printRtxClass(rtx_code code);
+  		bool isFunctionExcluded(char *function_name);
 
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;

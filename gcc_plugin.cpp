@@ -292,14 +292,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else if (strcmp(fName, "longjmp") == 0) {
                 onLongJumpFunctionCall(file_name, function_name, bb, insn);
                 printf("      longjmp \n");
-
-                //TODO: Find better way to exclude library functions
-              } else if (strcmp(fName, "strcmp") == 0 || strcmp(fName, "strlen") == 0 || strcmp(fName, "memcpy") == 0  
-                  || strcmp(fName, "__builtin_putchar") == 0 || strcmp(fName, "printf") == 0 
-                  || strcmp(fName, "__builtin_puts") == 0 || strcmp(fName, "__builtin_memcpy") == 0 
-                  || strcmp(fName, "modf") == 0) {
-                // do nothing
-              } else {
+              } else if (!isFunctionExcluded(fName)) {
                 onDirectFunctionCall(file_name, fName, bb, insn);
                 printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
                 //printf("%s %s %d: %s\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
@@ -354,6 +347,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       return 1;
     }
   }
+
+  //TODO: find better way for function exclusion
+  bool GCC_PLUGIN::isFunctionExcluded(char *function_name) {
+    return (strcmp(function_name, "__builtin_putchar") == 0 || strcmp(function_name, "printf") == 0 
+                  || strcmp(function_name, "__builtin_puts") == 0 || strcmp(function_name, "__builtin_memcpy") == 0);
+  } 
 
   void GCC_PLUGIN::writeLabelToTmpFile(unsigned label) {
     clearTmpFile();
