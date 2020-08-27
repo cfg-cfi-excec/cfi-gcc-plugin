@@ -220,7 +220,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
   unsigned int GCC_PLUGIN::execute(function * fun) {    
 	  char *function_name = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
-    const char *file_name = LOCATION_FILE(INSN_LOCATION (firstRealINSN(single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun)))));
+    char *file_name = (char*)DECL_SOURCE_FILE (current_function_decl);
 
     printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",function_name);
     printf("FUNCTION NAME: %s \n", function_name);
@@ -234,6 +234,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
       basic_block firstBb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
       rtx_insn* firstInsn = firstRealINSN(firstBb);
+
       onFunctionEntry(file_name, function_name, firstBb, firstInsn);
       //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
 
