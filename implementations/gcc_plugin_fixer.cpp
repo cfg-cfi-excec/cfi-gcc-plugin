@@ -23,7 +23,7 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function entry of MAIN
+    // Don't instrument function return of MAIN
     if (function_name.compare("main") != 0) {
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
@@ -31,6 +31,10 @@
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     generateAndEmitAsm("CFICALL", insn, block, false);
+  }
+
+  void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {

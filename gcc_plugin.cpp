@@ -351,8 +351,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
   //TODO: find better way for function exclusion
   bool GCC_PLUGIN::isFunctionExcluded(char *function_name) {
-    return (strcmp(function_name, "__builtin_putchar") == 0 || strcmp(function_name, "printf") == 0 
-                  || strcmp(function_name, "__builtin_puts") == 0 || strcmp(function_name, "__builtin_memcpy") == 0);
+    return (strcmp(function_name, "__builtin_putchar") == 0 
+      || strcmp(function_name, "__builtin_puts") == 0 
+      || strcmp(function_name, "__builtin_memset") == 0 
+      || strcmp(function_name, "__builtin_memcpy") == 0
+      || strcmp(function_name, "printf") == 0);
   } 
 
   void GCC_PLUGIN::writeLabelToTmpFile(unsigned label) {
