@@ -68,6 +68,7 @@
   void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile(); 
+
     int labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
 
@@ -78,12 +79,12 @@
 
     // add CFIRET instruction after the indirect JALR
     generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
-    // increase stack pointer
-    insn = generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
     // add CFIBR instruction (for backward edge protection)
-    insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, true);
+    insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
     
     if (labelPRC >= 0) {
+      // increase stack pointer
+      generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
       // push old register content to stack
       generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
       // re-route jump: write address of trampoline to register
