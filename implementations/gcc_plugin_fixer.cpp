@@ -11,7 +11,7 @@
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
-          generateAndEmitAsm("CFIMATLDCALLER " + function_call.function_name + " +" + std::to_string(function_call.offset), firstInsn, firstBlock, false);
+          generateAndEmitAsm("CFIMATLDCALLER " + function_name + " +" + std::to_string(function_call.offset), firstInsn, firstBlock, false);
           generateAndEmitAsm("CFIMATLDCALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
