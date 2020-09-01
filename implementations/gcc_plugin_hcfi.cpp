@@ -36,6 +36,8 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
+    } else {
+      generateAndEmitAsm("SETPC", insn, block, false);
     }
   }
 
