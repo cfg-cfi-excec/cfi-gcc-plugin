@@ -13,7 +13,12 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
+    // Don't instrument function returns of MAIN
+    // This is a (dirty) hack because CFI enforcement requires CFIDEL to be followed by
+    // CFIRET immediately, but functions above main are not instrumented.
+    if (strcmp(function_name.c_str(), "main") != 0) {
+      generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
+    }
   }
 
   void GCC_PLUGIN_HAFIX::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
