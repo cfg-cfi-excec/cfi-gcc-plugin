@@ -19,6 +19,7 @@
 #include "./implementations/gcc_plugin_hafix.h"
 #include "./implementations/gcc_plugin_trampolines.h"
 #include "./implementations/gcc_plugin_fixer.h"
+#include "./implementations/gcc_plugin_excec.h"
 
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
@@ -65,6 +66,11 @@ int plugin_init(struct plugin_name_args *plugin_info,
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_FIXER(g, plugin_info->argv, plugin_info->argc);
 				std::cout << "Using CFI Implementation FIXER" << "\n";
+				break;
+			} else if (std::strcmp(implementation, "EXCEC") == 0) {
+						std::string implementation = plugin_info->argv[i].value;
+				gcc_plugin = new GCC_PLUGIN_EXCEC(g, plugin_info->argv, plugin_info->argc);
+				std::cout << "Using CFI Implementation EXCEC" << "\n";
 				break;
 			} else {
 				std::cerr << "Invalid CFI Implementation declared (" << implementation << ")\n";
