@@ -30,7 +30,10 @@
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    generateAndEmitAsm("CFICALL", insn, block, false);
+    // Don't instrument function call of MAIN
+    if (function_name.compare("main") != 0) {
+      generateAndEmitAsm("CFICALL", insn, block, false);
+    }
   }
 
   void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {

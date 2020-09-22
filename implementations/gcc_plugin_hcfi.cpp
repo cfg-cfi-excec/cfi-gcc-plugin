@@ -29,7 +29,10 @@
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    generateAndEmitAsm("SETPC", insn, block, false);
+    // Don't instrument function call of MAIN
+    if (function_name.compare("main") != 0) {
+      generateAndEmitAsm("SETPC", insn, block, false);
+    }
   }
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
@@ -58,7 +61,7 @@
   {
     for (int i = 0; i < argc; i++) {
       if (std::strcmp(argv[i].key, "cfg_file") == 0) {
-        std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
+        //std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
