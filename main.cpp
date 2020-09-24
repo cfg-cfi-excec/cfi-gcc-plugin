@@ -15,11 +15,11 @@
 #include <print-tree.h>
 
 #include "gcc_plugin.h"
-#include "./implementations/gcc_plugin_hcfi.h"
-#include "./implementations/gcc_plugin_hafix.h"
-#include "./implementations/gcc_plugin_hecfi.h"
-#include "./implementations/gcc_plugin_fixer.h"
-#include "./implementations/gcc_plugin_excec.h"
+#include "gcc_plugin_hcfi.h"
+#include "gcc_plugin_hafix.h"
+#include "gcc_plugin_hecfi.h"
+#include "gcc_plugin_fixer.h"
+#include "gcc_plugin_excec.h"
 
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;

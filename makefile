@@ -1,9 +1,8 @@
-GCCDIR = /home/mario/gcc-plugins/gcc-install/bin
+RISCV ?= /opt/riscv
+$(info Using $(RISCV) as toolchain base dir)
 
-
-CXX = $(GCCDIR)/g++
-CCX_RISCV32 = /opt/riscv/bin/riscv32-unknown-elf-gcc
-CC_RISCV32 = /opt/riscv/lib/gcc/riscv32-unknown-elf/7.1.1/plugin/include
+CCX_RISCV32 = $(RISCV)/bin/riscv32-unknown-elf-gcc
+CC_RISCV32 = $(RISCV)/lib/gcc/riscv32-unknown-elf/7.1.1/plugin/include
 
 # Flags for the C++ compiler: C++11 and all the warnings
 CXXFLAGS = -std=c++11 -Wall -fno-rtti -fPIC
@@ -16,9 +15,7 @@ CXXFLAGS += -O -g -I$(CC_RISCV32)
 
 LDFLAGS = -std=c++11
 
-ROOT_DIR = ./
-IMPLEMENTATIONS_DIR = ./
-INCLUDE_DIR = -I$(ROOT_DIR) -I$(IMPLEMENTATIONS_DIR)
+INCLUDE_DIR = -I./ -I./implementations
 
 # top level goal: build our plugin as a shared library
 all: gcc_plugin.so
@@ -30,8 +27,6 @@ gcc_plugin.so: ./asmgen/InstrType.o ./asmgen/UpdatePoint.o  ./asmgen/AsmGen.o ./
 	$(CXX) $(INCLUDE_DIR) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f *.so
-	rm -f *.o
-	rm -f ./implementations/*.o
+	rm -f *.so *.o ./implementations/*.o
  
-.PHONY: all clean check
+.PHONY: all clean
