@@ -39,8 +39,20 @@ int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version) {
 	std::cerr << "\nCFI REGISTER CALLBACK" << "\n";
 	if(!plugin_default_version_check(version, &gcc_version)) {
-		std::cerr << "This GCC plugin is for version " << GCCPLUGIN_VERSION_MAJOR
-			<< "." << GCCPLUGIN_VERSION_MINOR << "\n";
+		fprintf(stderr, "This GCC plugin is for version %s built on %s (with %s; devphase \"%s\", revision \"%s\").\n",
+			gcc_version.basever,
+			gcc_version.datestamp,
+			gcc_version.configuration_arguments,
+			gcc_version.devphase,
+			gcc_version.revision
+		);
+		fprintf(stderr, "That does not match the one used: version %s built on %s (with %s; devphase \"%s\", revision \"%s\").\n",
+			version->basever,
+			version->datestamp,
+			version->configuration_arguments,
+			version->devphase,
+			version->revision
+		);
 		return 1;
 	}
 
