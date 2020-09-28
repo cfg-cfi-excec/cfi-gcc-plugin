@@ -6,7 +6,7 @@
   }
 
   void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    // Don't instrument function entry of MAIN
+    // Don't instrument function entry of MAIN with a CHECKLABEL
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
@@ -22,17 +22,15 @@
   }
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function entry of MAIN
-    if (function_name.compare("main") != 0) {
+    // Don't instrument function return of MAIN, __rt_init and __rt_deinit
+    // TODO: better solution for excluding main 
+    if (function_name.compare("main") != 0 && function_name.compare("__rt_init") != 0 && function_name.compare("__rt_deinit") != 0) {
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Don't instrument function call of MAIN
-    if (function_name.compare("main") != 0) {
-      generateAndEmitAsm("SETPC", insn, block, false);
-    }
+    generateAndEmitAsm("SETPC", insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
