@@ -23,8 +23,9 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function return of MAIN
-    if (function_name.compare("main") != 0) {
+    // Don't instrument function return of MAIN, __rt_init and __rt_deinit
+    // TODO: better solution for excluding main 
+    if (function_name.compare("main") != 0 && function_name.compare("__rt_init") != 0 && function_name.compare("__rt_deinit") != 0) {
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
   }
@@ -68,7 +69,7 @@
   void GCC_PLUGIN_FIXER::init() {
     for (int i = 0; i < argc; i++) {
       if (std::strcmp(argv[i].key, "cfg_file") == 0) {
-        std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
+        std::cerr << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
         //printFunctionCalls();
