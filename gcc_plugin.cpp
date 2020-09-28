@@ -222,8 +222,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 	  char *function_name = (char*)IDENTIFIER_POINTER (DECL_NAME (current_function_decl) );
     char *file_name = (char*)DECL_SOURCE_FILE (current_function_decl);
 
+    if (file_name == NULL) {
+      file_name = (char*)"";
+    }
+
    // printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",function_name);
     std::cerr << "FUNCTION NAME: " << function_name << std::endl;
+    //std::cerr << "FILE NAME: " << file_name << std::endl;
     //printf("FUNCTION ADDRESS: %p\n", current_function_decl);
 
     //debug_tree(current_function_decl);
@@ -244,23 +249,30 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
         FOR_BB_INSNS (bb, insn) {
           if (CALL_P (insn) && isCall(insn)) {
             bool isDirectCall = true;
+            rtx call;
             
             // Get the body of the function call
             rtx body = PATTERN(insn);
-            rtx parallel = XVECEXP(body, 0, 0);
-            rtx call;
-
-            //printf("CALL INSTRUCTION in %s : %d \n", file_name, LOCATION_LINE(INSN_LOCATION (insn)));
-
-            // Check whether the function returns a value or not:
-            // - If it returns a value, the first element of the body is a SET
-            // - Otherwiese it is of type CALL directly
-            if (GET_CODE (parallel) == SET) {
-              call = XEXP(parallel, 1);
-            } else if (GET_CODE (parallel) == CALL) {
-              call = parallel;
+            rtx set = body;          
+            
+            if (GET_CODE (set) == SET) {              
+              call = XEXP(set, 1);;
+            } else if (GET_CODE (set) == CALL) {              
+              call = set;
             } else {
-              printf("ERROR \n");
+              rtx parallel = XVECEXP(body, 0, 0);
+              //printf("CALL INSTRUCTION in %s : %d \n", file_name, LOCATION_LINE(INSN_LOCATION (insn)));
+
+              // Check whether the function returns a value or not:
+              // - If it returns a value, the first element of the body is a SET
+              // - Otherwiese it is of type CALL directly
+              if (GET_CODE (parallel) == SET) {
+                call = XEXP(parallel, 1);
+              } else if (GET_CODE (parallel) == CALL) {
+                call = parallel;
+              } else {
+                printf("ERROR \n");
+              }
             }
             
             rtx mem = XEXP(call, 0);
