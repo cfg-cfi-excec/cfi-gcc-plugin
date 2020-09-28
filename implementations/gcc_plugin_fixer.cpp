@@ -41,21 +41,27 @@
   }
 
   void GCC_PLUGIN_FIXER::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    rtx body = PATTERN(insn);
-    rtx parallel = XVECEXP(body, 0, 0);
-    rtx call;
-    if (GET_CODE (parallel) == SET) {
-      call = XEXP(parallel, 1);
-    } else if (GET_CODE (parallel) == CALL) {
-      call = parallel;
-    }
-    
-    rtx mem = XEXP(call, 0);
-    rtx subExpr = XEXP(mem, 0);
+    int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
+    if (label >= 0) {
+      // Only emit CFIFWD in case there is an entry in the config file
+      rtx body = PATTERN(insn);
+      rtx parallel = XVECEXP(body, 0, 0);
+      rtx call;
+      if (GET_CODE (parallel) == SET) {
+        call = XEXP(parallel, 1);
+      } else if (GET_CODE (parallel) == CALL) {
+        call = parallel;
+      }
+      
+      rtx mem = XEXP(call, 0);
+      rtx subExpr = XEXP(mem, 0);
 
-    if (((rtx_code)subExpr->code) == REG) {
-      std::string regName = getRegisterNameForNumber(REGNO(subExpr));
-      insn = generateAndEmitAsm("CFIFWD " + regName, insn, block, false);
+      if (((rtx_code)subExpr->code) == REG) {
+        std::string regName = getRegisterNameForNumber(REGNO(subExpr));
+        insn = generateAndEmitAsm("CFIFWD " + regName, insn, block, false);
+      }
+    } else {
+      onDirectFunctionCall(file_name, function_name, block, insn);
     }
   }
 
