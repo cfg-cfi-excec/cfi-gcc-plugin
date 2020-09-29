@@ -16,8 +16,8 @@
       }
     } else {
       // enable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_TOGGLE instruction
-      generateAndEmitAsm("CFI_DBG7 t0", firstInsn, firstBlock, false);
+      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
     }
   }
   
@@ -32,7 +32,7 @@
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     } else {
       // disable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_TOGGLE instruction
+      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
       generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
     }
   }

@@ -1,11 +1,11 @@
 #include "gcc_plugin_trampolines.h"
 
-  GCC_PLUGIN_TRAMPOLINES::GCC_PLUGIN_TRAMPOLINES(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
+  GCC_PLUGIN_HECFI::GCC_PLUGIN_HECFI(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
       : GCC_PLUGIN(ctxt, arguments, argcounter) {
     init();
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
+  void GCC_PLUGIN_HECFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of MAIN
     if (strcmp(function_name.c_str(), "main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
@@ -13,20 +13,29 @@
       if (label >= 0) {
         generateAndEmitAsm("CFICHK " + std::to_string(label), firstInsn, firstBlock, false);
       }
+    } else {
+      // enable CFI from here on
+      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
     }
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HECFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function returns of MAIN
+    // TODO: find way to remove the cfidel here
     // This is a (dirty) hack because CFI enforcement requires CFIDEL to be followed by
     // CFIRET immediately, but functions above main are not instrumented.
     if (strcmp(function_name.c_str(), "main") != 0) {
       generateAndEmitAsm("CFIDEL", lastInsn, lastBlock, false);
+    } else {
+      // disable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
     }
   }
 
   //TODO: only generate trampolines if the targeted functions occure in multiple calls
-  void GCC_PLUGIN_TRAMPOLINES::emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn) {
+  void GCC_PLUGIN_HECFI::emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn) {
     //Generate Trampolines for an indirect call in this function
     std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
 
@@ -58,7 +67,7 @@
     } 
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HECFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile();
 
@@ -71,16 +80,14 @@
     generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HECFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   
+  void GCC_PLUGIN_HECFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {   
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile(); 
-
     int labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-    std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
 
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
@@ -93,6 +100,8 @@
     insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
     
     if (labelPRC >= 0) {
+      std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
+
       // increase stack pointer
       generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
       // push old register content to stack
@@ -106,11 +115,12 @@
       rtx_insn *lastInsn = lastRealINSN(lastBlock);
       emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
     } else {
-       printf("\033[31m Warning: NO CFI RULES FOR INDIRECT CALL IN %s:%s:%d \x1b[0m\n",file_name.c_str(), function_name.c_str(), line_number);
+      std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
+        << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
     }
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HECFI::onNamedLabel(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectJumpSymbol(file_name, function_name, label_name);
 
     if (label >= 0) {
@@ -118,20 +128,21 @@
     }
   }
   
-  void GCC_PLUGIN_TRAMPOLINES::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HECFI::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectJump(file_name, function_name);
 
     if (label >= 0) {
       generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
     } else {
-       printf("\033[31m Warning: NO CFI RULES FOR INDIRECT JUMP IN %s:%s \x1b[0m\n",file_name.c_str(), function_name.c_str());
+      std::cerr << "Warning: NO CFI RULES FOR INDIRECT JUMP IN " << file_name.c_str() << ":" 
+        << function_name.c_str() << "\n";
     }
   }
 
-  void GCC_PLUGIN_TRAMPOLINES::init() {
+  void GCC_PLUGIN_HECFI::init() {
     for (int i = 0; i < argc; i++) {
       if (std::strcmp(argv[i].key, "cfg_file") == 0) {
-        std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
+        std::cerr << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
         //printFunctionCalls();
@@ -141,11 +152,11 @@
     }
   }
 
-  GCC_PLUGIN_TRAMPOLINES *GCC_PLUGIN_TRAMPOLINES::clone() {
+  GCC_PLUGIN_HECFI *GCC_PLUGIN_HECFI::clone() {
     // We do not clone ourselves
     return this;
   }
   
-	void GCC_PLUGIN_TRAMPOLINES::onPluginFinished() {
+	void GCC_PLUGIN_HECFI::onPluginFinished() {
     remove("tmp.txt");
   }

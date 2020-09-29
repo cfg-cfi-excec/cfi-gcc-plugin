@@ -58,10 +58,10 @@ int plugin_init(struct plugin_name_args *plugin_info,
 				gcc_plugin = new GCC_PLUGIN_HAFIX(g, plugin_info->argv, plugin_info->argc);
 				std::cerr << "Using CFI Implementation HAFIX" << "\n";
 				break;
-			} else if (std::strcmp(implementation, "TRAMPOLINES") == 0) {
+			} else if (std::strcmp(implementation, "HECFI") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
-				gcc_plugin = new GCC_PLUGIN_TRAMPOLINES(g, plugin_info->argv, plugin_info->argc);
-				std::cerr << "Using CFI Implementation TRAMPOLINES" << "\n";
+				gcc_plugin = new GCC_PLUGIN_HECFI(g, plugin_info->argv, plugin_info->argc);
+				std::cerr << "Using CFI Implementation HECFI" << "\n";
 				break;
 			} else if (std::strcmp(implementation, "FIXER") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
