@@ -14,6 +14,10 @@
       if (label >= 0) {
         generateAndEmitAsm("CHECKLABEL " + std::to_string(label), firstInsn, firstBlock, false);
       }
+    } else {
+      // enable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_TOGGLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", firstInsn, firstBlock, false);
     }
   }
   
@@ -22,10 +26,14 @@
   }
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function return of MAIN, __rt_init and __rt_deinit
+    // Don't instrument function return of MAIN
     // TODO: better solution for excluding main 
-    if (function_name.compare("main") != 0 && function_name.compare("__rt_init") != 0 && function_name.compare("__rt_deinit") != 0) {
+    if (function_name.compare("main") != 0) {
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
+    } else {
+      // disable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_TOGGLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
     }
   }
 
