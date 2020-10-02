@@ -6,8 +6,8 @@
   }
 
   void GCC_PLUGIN_HECFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    // Don't instrument function entry of MAIN
-    if (strcmp(function_name.c_str(), "main") != 0) {
+    // Don't instrument function entry of _main with a CFICHK
+    if (strcmp(function_name.c_str(), "_main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
       if (label >= 0) {
@@ -21,13 +21,7 @@
   }
 
   void GCC_PLUGIN_HECFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function returns of MAIN
-    // TODO: find way to remove the cfidel here
-    // This is a (dirty) hack because CFI enforcement requires CFIDEL to be followed by
-    // CFIRET immediately, but functions above main are not instrumented.
-    if (strcmp(function_name.c_str(), "main") != 0) {
-      generateAndEmitAsm("CFIDEL", lastInsn, lastBlock, false);
-    } else {
+    if (function_name.compare("_main") == 0) {
       // disable CFI from here on
       //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
       generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
@@ -68,16 +62,33 @@
   }
 
   void GCC_PLUGIN_HECFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    writeLabelToTmpFile(readLabelFromTmpFile()+1);
-    unsigned label = readLabelFromTmpFile();
+    // TODO: Fix CFI in printf
+    if (function_name.compare("printf") == 0) {
+      // disable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", insn, block, false);
 
-    generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
+      rtx_insn *tmpInsn = NEXT_INSN(insn);
+      while (NOTE_P(tmpInsn)) {
+        tmpInsn = NEXT_INSN(tmpInsn);
+      }
 
-    rtx_insn *tmpInsn = NEXT_INSN(insn);
-    while (NOTE_P(tmpInsn)) {
-      tmpInsn = NEXT_INSN(tmpInsn);
+      // Enable CFI again after printf
+      // TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      // TODO: Fix CFI in printf
+      generateAndEmitAsm("CFI_DBG6 t0", tmpInsn, block, false);
+    } else {
+      writeLabelToTmpFile(readLabelFromTmpFile()+1);
+      unsigned label = readLabelFromTmpFile();
+
+      generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
+
+      rtx_insn *tmpInsn = NEXT_INSN(insn);
+      while (NOTE_P(tmpInsn)) {
+        tmpInsn = NEXT_INSN(tmpInsn);
+      }
+      generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
     }
-    generateAndEmitAsm("CFIRET " + std::to_string(label), tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_HECFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
@@ -88,7 +99,7 @@
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
     unsigned label = readLabelFromTmpFile(); 
     int labelPRC = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
-
+    rtx_insn *indirectCall = insn;
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
@@ -100,7 +111,7 @@
     insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
     
     if (labelPRC >= 0) {
-      std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
+      std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
 
       // increase stack pointer
       generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
