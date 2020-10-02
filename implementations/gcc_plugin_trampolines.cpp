@@ -1,4 +1,4 @@
-#include "gcc_plugin_trampolines.h"
+#include "gcc_plugin_hecfi.h"
 
   GCC_PLUGIN_HECFI::GCC_PLUGIN_HECFI(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter)
       : GCC_PLUGIN(ctxt, arguments, argcounter) {
