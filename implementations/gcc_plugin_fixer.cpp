@@ -6,8 +6,12 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    // Load the policy matrix on entry of MAIN
-    if (function_name.compare("main") == 0) {
+    if (strcmp(function_name.c_str(), "_main") == 0) {
+      // enable CFI from here on
+      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
+
+      // Load the policy matrix on entry of _main
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
@@ -15,6 +19,11 @@
           generateAndEmitAsm("CFIMATLDCALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
+    } else if (function_name.compare("printf") == 0) {
+      // Disable CFI temporarily during printf
+      // TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+      // TODO: Fix CFI in printf
+      generateAndEmitAsm("CFI_DBG7 t0", firstInsn, firstBlock, false);
     }
   }
   
@@ -23,16 +32,26 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function return of MAIN, __rt_init and __rt_deinit
-    // TODO: better solution for excluding main 
-    if (function_name.compare("main") != 0 && function_name.compare("__rt_init") != 0 && function_name.compare("__rt_deinit") != 0) {
+    // Don't instrument function return of _main
+    if (function_name.compare("_main") != 0) {
+      // Enable CFI again after printf
+      // TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      // TODO: Fix CFI in printf
+      if (function_name.compare("printf") == 0) {
+        generateAndEmitAsm("CFI_DBG6 t0", lastInsn, lastBlock, false);
+      }
+
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
+    } else {
+      // disable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     // Don't instrument function call of MAIN
-    if (function_name.compare("main") != 0) {
+    if (function_name.compare("_main") != 0) {
       generateAndEmitAsm("CFICALL", insn, block, false);
     }
   }
