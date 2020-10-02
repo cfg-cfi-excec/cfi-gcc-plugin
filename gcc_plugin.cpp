@@ -280,7 +280,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             tree func = 0;
 
             if (((rtx_code)subExpr->code) == SYMBOL_REF) {
-              func = SYMBOL_REF_DECL(subExpr);
+              func = SYMBOL_REF_DECL(subExpr);              
             } else  if (((rtx_code)subExpr->code) == CONST) {
               rtx tmp = XEXP(subExpr, 0);
               tmp = XEXP(tmp, 0);
@@ -306,6 +306,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 onLongJumpFunctionCall(file_name, function_name, bb, insn);
                 printf("      longjmp \n");
               } else {
+                // This is a direct JAL
                 onDirectFunctionCall(file_name, fName, bb, insn);
                 //printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
                 //printf("%s %s %d: %s\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
@@ -314,6 +315,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               onIndirectFunctionCall(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               //printf("      calling function INDIRECTLY \n");
               //printf("%s %s %d\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)));
+            } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
+              // This is a direct JALR
+              onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn);         
             }
           } else if (JUMP_P(insn)) {
             rtx ret = PATTERN(insn);
