@@ -51,6 +51,7 @@
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if(!isFunctionExcludedFromCFI(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
     }

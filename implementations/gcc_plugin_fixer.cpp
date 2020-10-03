@@ -51,6 +51,7 @@
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     // Don't instrument function call of MAIN
+    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (function_name.compare("_main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
       generateAndEmitAsm("CFICALL", insn, block, false);
     }
