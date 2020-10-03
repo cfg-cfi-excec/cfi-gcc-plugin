@@ -6,6 +6,7 @@
 #include <string.h>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 
 // This is the first gcc header to be included
 #include "gcc-plugin.h"
@@ -96,6 +97,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
  		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
 		int getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
 		int getLabelForIndirectJump(std::string file_name, std::string function_name);
+		bool isFunctionExcludedFromCFI(std::string function_name);
 
 	private:
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);

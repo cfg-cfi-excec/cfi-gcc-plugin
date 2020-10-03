@@ -317,7 +317,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               //printf("%s %s %d\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)));
             } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
               // This is a direct JALR
-              onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn);         
+              onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn); 
             }
           } else if (JUMP_P(insn)) {
             rtx ret = PATTERN(insn);
@@ -478,6 +478,27 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
   std::vector<CFG_LABEL_JUMP> GCC_PLUGIN::getIndirectLabelJumps() {
     return label_jumps;
+  }
+
+  // TODO: remove this exclusions again at some point
+  bool GCC_PLUGIN::isFunctionExcludedFromCFI(std::string function_name) {
+    std::vector<std::string> exclusions {
+      "__floatsidf",
+      "__adddf3",
+      "__fixdfsi",
+      "__divdf3",
+      "__subdf3",
+      "__muldf3",
+      "__gedf2",
+      "__ltdf2",
+      "__ledf2"
+    };
+
+    if (std::find(std::begin(exclusions), std::end(exclusions), function_name) != std::end(exclusions)) {
+      return true;
+    }
+
+    return false;
   }
 
   void GCC_PLUGIN::readConfigFile(char * filename) {
