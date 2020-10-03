@@ -51,7 +51,9 @@
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    generateAndEmitAsm("SETPC", insn, block, false);
+    if(!isFunctionExcludedFromCFI(function_name)) {
+      generateAndEmitAsm("SETPC", insn, block, false);
+    }
   }
 
   void GCC_PLUGIN_HCFI::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
