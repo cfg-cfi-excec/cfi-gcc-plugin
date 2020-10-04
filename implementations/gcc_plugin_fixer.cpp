@@ -19,11 +19,6 @@
           generateAndEmitAsm("CFIMATLDCALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
-    } else if (function_name.compare("printf") == 0) {
-      // Disable CFI temporarily during printf
-      // TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-      // TODO: Fix CFI in printf
-      generateAndEmitAsm("CFI_DBG7 t0", firstInsn, firstBlock, false);
     }
   }
   
@@ -33,24 +28,17 @@
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function return of _main
-    if (function_name.compare("_main") != 0) {
-      // Enable CFI again after printf
-      // TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
-      // TODO: Fix CFI in printf
-      if (function_name.compare("printf") == 0) {
-        generateAndEmitAsm("CFI_DBG6 t0", lastInsn, lastBlock, false);
-      }
-
-      generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
-    } else {
+    if (function_name.compare("_main") == 0) {
       // disable CFI from here on
       //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
       generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
+    } else {
+      generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Don't instrument function call of MAIN
+    // Don't instrument function call of _main
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (function_name.compare("_main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
       generateAndEmitAsm("CFICALL", insn, block, false);
