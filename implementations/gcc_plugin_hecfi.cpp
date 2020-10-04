@@ -121,7 +121,7 @@
       generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
 
       basic_block lastBlock = lastRealBlockInFunction();
-      rtx_insn *lastInsn = lastRealINSN(lastBlock);
+      rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
       emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
     } else {
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 

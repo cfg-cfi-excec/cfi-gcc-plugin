@@ -23,7 +23,7 @@ INCLUDE_DIR = -I$(ROOT_DIR) -I$(IMPLEMENTATIONS_DIR)
 # top level goal: build our plugin as a shared library
 all: gcc_plugin.so
 
-gcc_plugin.so: ./asmgen/InstrType.o ./asmgen/AsmGen.o ./implementations/gcc_plugin_hcfi.o ./implementations/gcc_plugin_excec.o ./implementations/gcc_plugin_hafix.o ./implementations/gcc_plugin_hecfi.o ./implementations/gcc_plugin_fixer.o gcc_plugin.o main.o 
+gcc_plugin.so: ./asmgen/InstrType.o ./asmgen/UpdatePoint.o  ./asmgen/AsmGen.o ./implementations/gcc_plugin_hcfi.o ./implementations/gcc_plugin_excec.o ./implementations/gcc_plugin_hafix.o ./implementations/gcc_plugin_hecfi.o ./implementations/gcc_plugin_fixer.o gcc_plugin.o main.o 
 	$(CXX) $(LDFLAGS) -shared $^ -o $@
 
 %.o: %.cpp

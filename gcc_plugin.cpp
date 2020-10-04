@@ -22,32 +22,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return EXIT_BLOCK_PTR_FOR_FN(cfun)->prev_bb;
   }
 
-  /**
-  * Function that returns the first real INSN of
-  * the basic block bb.
-  * (No Debug or Note insn)
-  */
-  rtx_insn* GCC_PLUGIN::firstRealINSN(basic_block bb){
-    rtx_insn* next = BB_HEAD(bb);
-    while(!NONDEBUG_INSN_P(next)){
-      next = NEXT_INSN(next);
-    }
-    return next;
-  }
-
-  /**
-  * Function that returns the last real INSN
-  * of the basic block
-  * (No Debug or Note insn)
-  */
-  rtx_insn* GCC_PLUGIN::lastRealINSN(basic_block bb){
-    rtx_insn* lastInsn = BB_END(bb);
-    while(!NONDEBUG_INSN_P(lastInsn)){
-      lastInsn = PREV_INSN(lastInsn);
-    }
-    return lastInsn;
-  }
-
   std::string GCC_PLUGIN::getRegisterNameForNumber(unsigned regno) {
     switch (regno) {
       case  0: return "zero";
@@ -106,7 +80,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       bool recursiveFunction = false;
 
       basic_block firstBb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
-      rtx_insn* firstInsn = firstRealINSN(firstBb);
+      rtx_insn* firstInsn = UpdatePoint::firstRealINSN(firstBb);
 
       onFunctionEntry(file_name, function_name, firstBb, firstInsn);
       //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
@@ -218,7 +192,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
 
         if (bb->next_bb == EXIT_BLOCK_PTR_FOR_FN(cfun)) {
-          rtx_insn* lastInsn = lastRealINSN(bb);
+          rtx_insn* lastInsn = UpdatePoint::lastRealINSN(bb);
           onFunctionExit(file_name, function_name, bb, lastInsn);
         } 
       }

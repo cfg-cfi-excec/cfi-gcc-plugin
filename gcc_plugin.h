@@ -19,6 +19,7 @@
 #include <print-tree.h>
 #include "asmgen/AsmGen.h"
 #include "asmgen/InstrType.h"
+#include "asmgen/UpdatePoint.h"
 
 const struct pass_data cfi_plugin_pass_data = {
 		.type = RTL_PASS,
@@ -80,8 +81,6 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
  
 		rtx_insn* generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* firstRealINSN(basic_block bb);
-		rtx_insn* lastRealINSN(basic_block bb);
 		basic_block lastRealBlockInFunction();
 		std::string getRegisterNameForNumber(unsigned regno);
 		
