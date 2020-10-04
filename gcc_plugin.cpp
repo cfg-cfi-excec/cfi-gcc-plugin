@@ -18,11 +18,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return attachRtx;
   }
 
-  bool GCC_PLUGIN::isCall(rtx_insn* expr){
-    rtx innerExpr = XEXP(expr, 3);
-    return InstrType::findCode(innerExpr, CALL);
-  }
-
   basic_block GCC_PLUGIN::lastRealBlockInFunction() {
     return EXIT_BLOCK_PTR_FOR_FN(cfun)->prev_bb;
   }
@@ -120,7 +115,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
-          if (CALL_P (insn) && isCall(insn)) {
+          if (CALL_P (insn) && InstrType::findCode(XEXP(insn, 3), CALL)) {
             bool isDirectCall = true;
             rtx call;
             

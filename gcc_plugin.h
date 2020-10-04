@@ -101,12 +101,6 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		bool isFunctionExcludedFromCFI(std::string function_name);
 
 	private:
-		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
-	 	bool findCode(rtx expr, rtx_code code);
-		bool isCall(rtx_insn* expr);
-
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;
 		std::vector<CFG_SYMBOL> indirectly_called_functions;
