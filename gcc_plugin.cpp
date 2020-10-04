@@ -308,6 +308,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else {
                 // This is a direct JAL
                 onDirectFunctionCall(file_name, fName, bb, insn);
+                //std::cerr << "CALLING: " << fName << std::endl;
                 //printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
                 //printf("%s %s %d: %s\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
               }
@@ -317,6 +318,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               //printf("%s %s %d\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)));
             } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
               // This is a direct JALR
+              //std::cerr << "CALLING: " << XSTR(subExpr, 0) << std::endl;
               onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn); 
             }
           } else if (JUMP_P(insn)) {
