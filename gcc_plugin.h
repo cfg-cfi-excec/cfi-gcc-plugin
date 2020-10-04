@@ -17,7 +17,8 @@
 #include <tree-pass.h>
 #include <tree.h>
 #include <print-tree.h>
-//#include <stringpool.h>
+#include "asmgen/AsmGen.h"
+#include "asmgen/InstrType.h"
 
 const struct pass_data cfi_plugin_pass_data = {
 		.type = RTL_PASS,
@@ -102,13 +103,9 @@ class GCC_PLUGIN : public rtl_opt_pass{
 	private:
 		rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
-		rtx_insn* emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after);
 		rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
-		rtx createConstInt(int number);
 	 	bool findCode(rtx expr, rtx_code code);
 		bool isCall(rtx_insn* expr);
-		bool isReturn(rtx_insn* expr);
-		void printRtxClass(rtx_code code);
 
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;

@@ -7,71 +7,24 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 		argv = arguments;
 }
 
-
-  // Credits to https://github.com/MGroupKULeuvenBrugesCampus/CFED_Plugin for these functions
-
-  /**
-  * Method to find the provided rtx_code in the given
-  * rtx. Is a recursive method to make sure all fields of
-  * the provided rtx is examined.
-  */
-  bool GCC_PLUGIN::findCode(rtx expr, rtx_code code){
-    if( expr == 0x00 ){
-      return false;
+	rtx_insn* GCC_PLUGIN::generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after) {
+    if (!insn.empty()){
+      char *buff = new char[insn.size()+1];
+      std::copy(insn.begin(), insn.end(), buff);
+      buff[insn.size()] = '\0';
+      return AsmGen::emitAsmInput(buff, attachRtx, bb, after);
     }
 
-    rtx_code exprCode = (rtx_code) expr->code;			// Get the code of the expression
-    const char* format = GET_RTX_FORMAT(exprCode);		// Get the format of the expression, tells what operands are expected
-
-    if(exprCode == code){					// Test if expression is a CODE expression
-      return true;
-    }
-    else if(exprCode == ASM_OPERANDS){
-      return false;
-    }
-    else{
-      for (int x=0; x < GET_RTX_LENGTH(exprCode); x++){	// Loop over all characters in the format
-        if(format[x] == 'e'){							// Test if they are an expression
-          rtx subExpr = XEXP(expr,x);					// Get the expression
-          if (findCode(subExpr, code)){				// Recursive call to this function
-            return true;
-          }
-        }
-        else if(format[x] == 'E'){						// Test if a Vector
-          for(int i=0; i<XVECLEN(expr,0);i++){		// Loop over all expressions in the vector
-            rtx subExpr = XVECEXP(expr, 0, i);		// Get the expression
-            if(findCode(subExpr, code)){			// Recursive call to this function
-              return true;
-            }
-          }
-        }
-      }
-    }
-    return false;
+    return attachRtx;
   }
 
-  /*
-  * Actually emits the codelabel at the desired place
-  */
-  rtx_insn* GCC_PLUGIN::emitLabel(rtx label, rtx_insn* attachRtx, bool after){
-    if(after){
-      return emit_label_after(label, attachRtx);
-    }
-    else{
-      return emit_label_before(label, attachRtx);
-    }
+  bool GCC_PLUGIN::isCall(rtx_insn* expr){
+    rtx innerExpr = XEXP(expr, 3);
+    return InstrType::findCode(innerExpr, CALL);
   }
 
-  /*
-  * Actually emits the insn at the desired place.
-  */
-  rtx_insn* GCC_PLUGIN::emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after){
-    if (after){
-      return emit_insn_after_noloc(rtxInsn, attachRtx, bb);
-    }
-    else{
-      return emit_insn_before_noloc(rtxInsn, attachRtx, bb);
-    }
+  basic_block GCC_PLUGIN::lastRealBlockInFunction() {
+    return EXIT_BLOCK_PTR_FOR_FN(cfun)->prev_bb;
   }
 
   /**
@@ -98,86 +51,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       lastInsn = PREV_INSN(lastInsn);
     }
     return lastInsn;
-  }
-
-  /**
-  * Emits the provided assembly instruction
-  */
-  rtx_insn* GCC_PLUGIN::emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after){
-    rtx asmBxLR = gen_rtx_ASM_INPUT_loc(VOIDmode, asmInstr, 1);
-    asmBxLR->volatil=1;
-    rtx memRTX = gen_rtx_MEM(BLKmode, gen_rtx_SCRATCH(VOIDmode));
-    rtx clobber = gen_rtx_CLOBBER(VOIDmode, memRTX);
-    rtvec vec = rtvec_alloc(2);
-    vec->elem[0] = asmBxLR;
-    vec->elem[1] = clobber;
-    rtx par = gen_rtx_PARALLEL(VOIDmode, vec);
-    rtx_insn* insn = emitInsn(par, attachRtx, bb, after);
-    return insn;
-  }
-
-	rtx_insn* GCC_PLUGIN::generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after) {
-    if (!insn.empty()){
-      char *buff = new char[insn.size()+1];
-      std::copy(insn.begin(), insn.end(), buff);
-      buff[insn.size()] = '\0';
-      return emitAsmInput(buff, attachRtx, bb, after);
-    }
-
-    return attachRtx;
-  }
-
- /**
-  * Emits: .codeLabel
-  */
-  rtx_insn* GCC_PLUGIN::emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after){
-    //rtx_insn* next = NEXT_INSN(attachRtx);
-    rtx codeLab = gen_label_rtx();
-    rtx_insn* insn = emitLabel(codeLab, attachRtx, after);
-    return insn;
-  }
-
-  /**
-  * Method to easily create a CONST_INT rtx
-  */
-  rtx GCC_PLUGIN::createConstInt(int number){
-    rtx constInt = rtx_alloc(CONST_INT);
-    XWINT(constInt,0) = number;
-    return constInt;
-  }
-
-  bool GCC_PLUGIN::isCall(rtx_insn* expr){
-    rtx innerExpr = XEXP(expr, 3);
-    return findCode(innerExpr, CALL);
-  }
-  
-  /**
-  * Method to determine whether or not the provided
-  * rtx_insn is a return instruction
-  */
-  bool GCC_PLUGIN::isReturn(rtx_insn* expr){
-    rtx innerExpr = XEXP(expr, 3);
-    bool ret =  findCode(innerExpr, RETURN);
-    bool simpRet = findCode(innerExpr, SIMPLE_RETURN);
-    return (ret || simpRet);
-  }
-
-  void GCC_PLUGIN::printRtxClass(rtx_code code) {
-    if (GET_RTX_CLASS(code) == RTX_OBJ) {
-      printf("    RTX_CLASS: RTX_OBJ\n");
-    } else if (GET_RTX_CLASS(code) == RTX_CONST_OBJ) {
-      printf("    RTX_CLASS: RTX_CONST_OBJ\n");
-    } else if (GET_RTX_CLASS(code) == RTX_INSN) {
-      printf("    RTX_CLASS: RTX_INSN\n");
-    } else if (GET_RTX_CLASS(code) == RTX_EXTRA) {
-      printf("    RTX_CLASS: RTX_EXTRA\n");
-    } else  {
-      printf("    RTX_CLASS: -------- ");
-    }     
-  }
-
-  basic_block GCC_PLUGIN::lastRealBlockInFunction() {
-    return EXIT_BLOCK_PTR_FOR_FN(cfun)->prev_bb;
   }
 
   std::string GCC_PLUGIN::getRegisterNameForNumber(unsigned regno) {
