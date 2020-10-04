@@ -68,12 +68,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       file_name = (char*)"";
     }
 
-   // printf("\x1b[92m GCC Plugin executing for function \x1b[92;1m %s \x1b[0m\n",function_name);
     std::cerr << "FUNCTION NAME: " << function_name << std::endl;
-    //std::cerr << "FILE NAME: " << file_name << std::endl;
-    //printf("FUNCTION ADDRESS: %p\n", current_function_decl);
-
-    //debug_tree(current_function_decl);
+    std::cerr << "FILE NAME: " << file_name << std::endl;
+    std::cerr << "FUNCTION ADDRESS: " << static_cast<void*>(current_function_decl) << std::endl;
 
     try{
       basic_block bb;
@@ -83,7 +80,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       rtx_insn* firstInsn = UpdatePoint::firstRealINSN(firstBb);
 
       onFunctionEntry(file_name, function_name, firstBb, firstInsn);
-      //printf("%s %s ###: \n", LOCATION_FILE(INSN_LOCATION (firstInsn)), function_name);
+      std::cerr << LOCATION_FILE(INSN_LOCATION (firstInsn)) << ":" << function_name << std::endl;
 
       FOR_EACH_BB_FN(bb, cfun){
           
@@ -103,7 +100,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               call = set;
             } else {
               rtx parallel = XVECEXP(body, 0, 0);
-              //printf("CALL INSTRUCTION in %s : %d \n", file_name, LOCATION_LINE(INSN_LOCATION (insn)));
 
               // Check whether the function returns a value or not:
               // - If it returns a value, the first element of the body is a SET
@@ -113,7 +109,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else if (GET_CODE (parallel) == CALL) {
                 call = parallel;
               } else {
-                printf("ERROR \n");
+                std::cout << "An error occured..." << std::endl;
+                return 1;
               }
             }
             
@@ -130,7 +127,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             } else  if (((rtx_code)subExpr->code) == REG) {
               isDirectCall = false;
             } else {
-              printf("ERROR (RTX other - %d)\n", ((rtx_code)subExpr->code));
+                std::cout << "An error occured..." << std::endl;
+                return 1;
             }
 
             if (func != 0) {
@@ -140,27 +138,22 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               if (strcmp(fName, function_name) == 0) {
                 recursiveFunction = true;
                 onRecursiveFunctionCall(file_name, function_name, bb, insn);
-                //printf("      onRecursiveFunctionCall \n");
               } else if (strcmp(fName, "setjmp") == 0) {
                 onSetJumpFunctionCall(file_name, function_name, bb, insn);
-                printf("      setjmp \n");
               } else if (strcmp(fName, "longjmp") == 0) {
                 onLongJumpFunctionCall(file_name, function_name, bb, insn);
-                printf("      longjmp \n");
               } else {
                 // This is a direct JAL
                 onDirectFunctionCall(file_name, fName, bb, insn);
-                //std::cerr << "CALLING: " << fName << std::endl;
-                //printf("      calling function <%s> DIRECTLY with address %p\n", fName, func);
-                //printf("%s %s %d: %s\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), fName);
+                //std::cerr << "CALLING directly: " << fName << std::endl;
               }
             } else if (!isDirectCall) {
               onIndirectFunctionCall(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
-              //printf("      calling function INDIRECTLY \n");
-              //printf("%s %s %d\n", file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)));
+              //std::cerr << "CALLING indirectly" << std::endl;
+              //std::cerr << "CALLING indirectly (" << file_name << ":" << function_name << ":" << std::to_string(LOCATION_LINE(INSN_LOCATION (insn))) << ")" << std::endl;
             } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
               // This is a direct JALR
-              //std::cerr << "CALLING: " << XSTR(subExpr, 0) << std::endl;
+              //std::cerr << "CALLING directly: " << fName << std::endl;
               onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn); 
             }
           } else if (JUMP_P(insn)) {
@@ -175,7 +168,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
               //It is not possible to extract line number here unfortunately
               onIndirectJump(file_name, function_name, bb, insn);
-              //printf("      jumping to label INDIRECTLY\n");
+              //std::cerr << "JUMPING to label indirectly: " << std::endl;
             }
             
           } else if (LABEL_P(insn) && LABEL_NAME (insn) != NULL) {             
@@ -184,9 +177,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               tmp = NEXT_INSN(tmp);
             }
 
-            //debug_rtx(insn);
             onNamedLabel(file_name, function_name, LABEL_NAME (insn), bb, tmp);
-            //printf("      NAMED LABEL found: %s\n", LABEL_NAME (insn));
+            //std::cerr << "    NAMED LABEL found: " << LABEL_NAME (insn) << std::endl;
           }
         }
 
@@ -201,10 +193,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
         onFunctionRecursionEntry(file_name, function_name, firstBb, firstInsn);
       }
 
-      //printf("\x1b[92m--------------------- Plugin fully ran -----------------------\n\x1b[0m");
       return 0;
     } catch (const char* e){
-      printf("\x1b[91m--------------------- Plugin did not execute completely!  -----------------------\x1b[0m\n\t%s\n", e);
+      std::cout << "An error occured..." << std::endl;
       return 1;
     }
   }
@@ -268,8 +259,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    printf("NOT FOUND (getLabelForIndirectJumpSymbol): %s -- %s -- %s \n\n", function_name.c_str(), symbol_name.c_str(), file_name.c_str());
-
+    std::cerr << "NOT FOUND (getLabelForIndirectJumpSymbol): " << function_name << " -- " << symbol_name  << " -- " << file_name<< std::endl;
     return -1;
   }
 
@@ -282,8 +272,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    //printf("NO LABEL FOUND (getLabelForIndirectJump): %s -- %s \n\n", file_name.c_str(), function_name.c_str());
-
+    std::cerr << "NO LABEL FOUND (getLabelForIndirectJump): " << file_name << " -- " << function_name << std::endl;
     return -1;
   }
 
@@ -297,8 +286,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
 
 
-    //printf("NO LABEL FOUND (getLabelForIndirectlyCalledFunction): %s -- %s \n\n", function_name.c_str(), file_name.c_str());
-
+    std::cerr << "NO LABEL FOUND (getLabelForIndirectlyCalledFunction): " << function_name << " -- " << file_name << std::endl;
     return -1;
   }
 
