@@ -62,9 +62,8 @@
   }
 
   void GCC_PLUGIN_HECFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // TODO: Fix CFI in printf
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if (function_name.compare("printf") == 0 || isFunctionExcludedFromCFI(function_name)) {
+    if (isFunctionExcludedFromCFI(function_name)) {
       // disable CFI from here on
       //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
       generateAndEmitAsm("CFI_DBG7 t0", insn, block, false);
@@ -74,11 +73,9 @@
         tmpInsn = NEXT_INSN(tmpInsn);
       }
 
-      // Enable CFI again after printf
-      // TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
-      // TODO: Fix CFI in printf
+      // Enable CFI again after excluded function
       generateAndEmitAsm("CFI_DBG6 t0", tmpInsn, block, false);
-    } else if(!isFunctionExcludedFromCFI(function_name)) {
+    } else {
       writeLabelToTmpFile(readLabelFromTmpFile()+1);
       unsigned label = readLabelFromTmpFile();
 
