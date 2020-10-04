@@ -482,7 +482,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
-  // TODO: remove this exclusions again at some point
+  // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
   bool GCC_PLUGIN::isFunctionExcludedFromCFI(std::string function_name) {
     std::vector<std::string> exclusions {
       "__floatsidf",

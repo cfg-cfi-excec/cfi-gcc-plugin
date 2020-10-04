@@ -57,8 +57,8 @@
   }
 
   void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    //TODO: Set Label propperly
-    generateAndEmitAsm("SJCFI 0x42", insn, block, false);
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    generateAndEmitAsm("SJCFI " + std::to_string(readLabelFromTmpFile()), insn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
