@@ -69,8 +69,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
 
     std::cerr << "FUNCTION NAME: " << function_name << std::endl;
-    std::cerr << "FILE NAME: " << file_name << std::endl;
-    std::cerr << "FUNCTION ADDRESS: " << static_cast<void*>(current_function_decl) << std::endl;
+    //std::cerr << "FILE NAME: " << file_name << std::endl;
+    //std::cerr << "FUNCTION ADDRESS: " << static_cast<void*>(current_function_decl) << std::endl;
 
     try{
       basic_block bb;
@@ -80,7 +80,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       rtx_insn* firstInsn = UpdatePoint::firstRealINSN(firstBb);
 
       onFunctionEntry(file_name, function_name, firstBb, firstInsn);
-      std::cerr << LOCATION_FILE(INSN_LOCATION (firstInsn)) << ":" << function_name << std::endl;
+      //std::cerr << LOCATION_FILE(INSN_LOCATION (firstInsn)) << ":" << function_name << std::endl;
 
       FOR_EACH_BB_FN(bb, cfun){
           
@@ -259,7 +259,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    std::cerr << "NOT FOUND (getLabelForIndirectJumpSymbol): " << function_name << " -- " << symbol_name  << " -- " << file_name<< std::endl;
+    //std::cerr << "NOT FOUND (getLabelForIndirectJumpSymbol): " << function_name << " -- " << symbol_name  << " -- " << file_name<< std::endl;
     return -1;
   }
 
@@ -272,7 +272,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    std::cerr << "NO LABEL FOUND (getLabelForIndirectJump): " << file_name << " -- " << function_name << std::endl;
+    //std::cerr << "NO LABEL FOUND (getLabelForIndirectJump): " << file_name << " -- " << function_name << std::endl;
     return -1;
   }
 
@@ -286,7 +286,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
 
 
-    std::cerr << "NO LABEL FOUND (getLabelForIndirectlyCalledFunction): " << function_name << " -- " << file_name << std::endl;
+    //std::cerr << "NO LABEL FOUND (getLabelForIndirectlyCalledFunction): " << function_name << " -- " << file_name << std::endl;
     return -1;
   }
 
