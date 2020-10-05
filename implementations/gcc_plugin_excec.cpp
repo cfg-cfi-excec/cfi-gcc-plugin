@@ -6,27 +6,27 @@
   }
 
   void GCC_PLUGIN_EXCEC::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    // Don't instrument function entry of MAIN
-    if (strcmp(function_name.c_str(), "main") != 0) {
+    // Don't instrument function entry of _main with a CFICHK
+    if (strcmp(function_name.c_str(), "_main") != 0) {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
       // only instrument functions, which are known to be called indirectly
       if (label >= 0) {
         generateAndEmitAsm("CFICHK " + std::to_string(label), firstInsn, firstBlock, false);
       }
+    } else {
+      // enable CFI from here on
+      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
     }
   }
 
   void GCC_PLUGIN_EXCEC::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function entry of MAIN
-    if (function_name.compare("main") != 0) {
-      generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
+    if (function_name.compare("_main") == 0) {
+      // disable CFI from here on
+      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
     }
-  }
-
-  void GCC_PLUGIN_EXCEC::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    //TODO: change to custom instruction
-    generateAndEmitAsm("CFICALL", insn, block, false);
   }
 
   void GCC_PLUGIN_EXCEC::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
@@ -34,9 +34,6 @@
     if (label >= 0) {
       //TODO: change to custom instruction
       generateAndEmitAsm("CFIPRC " + std::to_string(label), insn, block, false);
-    } else {
-      //TODO: change to custom instruction
-      generateAndEmitAsm("SETPC", insn, block, false);
     }
   }
 
@@ -63,7 +60,7 @@
   {
     for (int i = 0; i < argc; i++) {
       if (std::strcmp(argv[i].key, "cfg_file") == 0) {
-        std::cout << "CFG file for instrumentation: " << argv[i].value << "\n";
+        std::cerr << "CFG file for instrumentation: " << argv[i].value << "\n";
 
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
