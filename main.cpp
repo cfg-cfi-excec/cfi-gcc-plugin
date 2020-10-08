@@ -60,7 +60,9 @@ int plugin_init(struct plugin_name_args *plugin_info,
 		if (std::strcmp(plugin_info->argv[i].key, "cfi_implementation") == 0) {
 			const char* implementation = plugin_info->argv[i].value;
 
-			if (std::strcmp(implementation, "HCFI") == 0) {
+			if (std::strcmp(implementation, "NONE") == 0) {
+				return 0;
+			} else if (std::strcmp(implementation, "HCFI") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_HCFI(g, plugin_info->argv, plugin_info->argc);
 				std::cerr << "\nUsing CFI Implementation HCFI" << "\n";
