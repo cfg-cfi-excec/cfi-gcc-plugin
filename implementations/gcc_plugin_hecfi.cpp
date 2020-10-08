@@ -28,7 +28,6 @@
     }
   }
 
-  //TODO: only generate trampolines if the targeted functions occure in multiple calls
   void GCC_PLUGIN_HECFI::emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn) {
     //Generate Trampolines for an indirect call in this function
     std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
