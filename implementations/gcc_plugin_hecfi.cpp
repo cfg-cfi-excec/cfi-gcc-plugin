@@ -109,20 +109,28 @@
     insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
     
     if (labelPRC >= 0) {
-      std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
+      bool trampolinesNeeded = areTrampolinesNeeded(file_name, function_name, line_number);
+      //std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
-      // increase stack pointer
-      generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
-      // push old register content to stack
-      generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
-      // re-route jump: write address of trampoline to register
-      generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
-      // add CFIPRC instruction
-      generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+      if (trampolinesNeeded) {
+        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
 
-      basic_block lastBlock = lastRealBlockInFunction();
-      rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
-      emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
+        // increase stack pointer
+        generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
+        // push old register content to stack
+        generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
+        // re-route jump: write address of trampoline to register
+        generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
+        // add CFIPRC instruction
+        generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+
+        basic_block lastBlock = lastRealBlockInFunction();
+        rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
+        emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
+      } else {
+        // add CFIPRC instruction without trampolines
+        generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+      }
     } else {
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
         << function_name.c_str() << ":" << std::to_string( line_number) << "\n";

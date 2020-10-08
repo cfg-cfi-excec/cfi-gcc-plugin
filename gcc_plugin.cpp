@@ -246,6 +246,43 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
   }
 
+  bool GCC_PLUGIN::isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name) {
+    std::vector<CFG_FUNCTION_CALL> calls = getIndirectFunctionCalls();
+    unsigned numberOfUses = 0;
+
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      for(CFG_SYMBOL function : function_call.calls) {
+        if (function.file_name.compare(file_name) == 0 
+            && function.symbol_name.compare(function_name) == 0) {
+          numberOfUses++;
+        }
+      }
+    }
+
+    return (numberOfUses > 1);
+  }
+
+  bool GCC_PLUGIN::areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number) {
+    std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
+
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      if (function_call.function_name.compare(function_name) == 0) {
+        if (function_call.line_number == line_number) {
+          for(CFG_SYMBOL call : function_call.calls) {
+            bool trampolineNeeded = isFunctionUsedInMultipleIndirectCalls(call.file_name, call.symbol_name);
+            
+            if (trampolineNeeded) {
+              // generate trampoline even when only one single function is used within multiple indirect calls
+              return true;
+            }        
+          }
+        }
+      }
+    } 
+
+    return false;
+  }
+
   int GCC_PLUGIN::getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name) {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
       if (label_jump.file_name.compare(file_name) == 0) {
