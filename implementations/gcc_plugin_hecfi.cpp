@@ -9,15 +9,12 @@
     // Don't instrument function entry of _main with a CFICHK
     if (strcmp(function_name.c_str(), "_main") == 0) {
       // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
-      //TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
-      generateAndEmitAsm("CFI_DBG5 t0", firstInsn, firstBlock, false);
+      generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
       // enable CFI from here on
-      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
-      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
+      generateAndEmitAsm(CFI_ENABLE, firstInsn, firstBlock, false);
     } else if (strcmp(function_name.c_str(), "exit") == 0) {
       // reset CFI state because exit() breaks out of CFG
-      //TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
-      generateAndEmitAsm("CFI_DBG5 t0", firstInsn, firstBlock, false);
+      generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
     } else {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
@@ -30,8 +27,7 @@
   void GCC_PLUGIN_HECFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     if (function_name.compare("_main") == 0) {
       // disable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
+      generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     }
   }
 
@@ -71,8 +67,7 @@
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (isFunctionExcludedFromCFI(function_name)) {
       // disable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-      generateAndEmitAsm("CFI_DBG7 t0", insn, block, false);
+      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
 
       rtx_insn *tmpInsn = NEXT_INSN(insn);
       while (NOTE_P(tmpInsn)) {
@@ -80,7 +75,7 @@
       }
 
       // Enable CFI again after excluded function
-      generateAndEmitAsm("CFI_DBG6 t0", tmpInsn, block, false);
+      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
     } else {
       writeLabelToTmpFile(readLabelFromTmpFile()+1);
       unsigned label = readLabelFromTmpFile();
