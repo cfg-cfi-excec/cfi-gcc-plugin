@@ -376,6 +376,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__truncdfsf2",
       "__trunctfdf2",
       "__floatunsidf",
+      "__eqdf2",
       "pow",
       "sqrt",
       "cos",
