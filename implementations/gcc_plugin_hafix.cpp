@@ -5,9 +5,16 @@
 
   void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     if (strcmp(function_name.c_str(), "_main") == 0) {
+      // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
+      //TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
+      generateAndEmitAsm("CFI_DBG5 t0", firstInsn, firstBlock, false);
       // enable CFI from here on
       //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
       generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
+    } else if (strcmp(function_name.c_str(), "exit") == 0) {
+      // reset CFI state because exit() breaks out of CFG
+      //TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
+      generateAndEmitAsm("CFI_DBG5 t0", firstInsn, firstBlock, false);
     }
 
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
