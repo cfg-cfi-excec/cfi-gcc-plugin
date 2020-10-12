@@ -67,6 +67,13 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		int argc;
 		struct plugin_argument *argv;
 
+		//TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
+		const char *CFI_RESET = "CFI_DBG5 t0";
+		//TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
+		const char *CFI_ENABLE = "CFI_DBG6 t0";
+		//TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
+		const char *CFI_DISABLE = "CFI_DBG7 t0";
+
 		// These functions are optionally overwritten in derived classes
 		virtual void onFunctionEntry			(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {}
 		virtual void onFunctionRecursionEntry	(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {}
@@ -97,6 +104,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
  		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
 		int getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
 		int getLabelForIndirectJump(std::string file_name, std::string function_name);
+		bool isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name);
+		bool areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number);
 		bool isFunctionExcludedFromCFI(std::string function_name);
 
 	private:

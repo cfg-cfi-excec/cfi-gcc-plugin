@@ -17,6 +17,7 @@ class GCC_PLUGIN_EXCEC : public GCC_PLUGIN {
 		void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
 
 	private:
+		void emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn);
 		void init();
 };
 

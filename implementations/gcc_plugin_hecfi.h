@@ -9,8 +9,7 @@ class GCC_PLUGIN_HECFI : public GCC_PLUGIN {
 
 		GCC_PLUGIN_HECFI *clone();
 		void onPluginFinished();
-  		void emitTrampolines		(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn);
-  
+  		
 	protected:
 		void onFunctionEntry		(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn);
 		void onFunctionReturn		(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn);
@@ -21,6 +20,7 @@ class GCC_PLUGIN_HECFI : public GCC_PLUGIN {
 		void onIndirectJump			(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
 		
 	private:
+		void emitTrampolines		(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn);
 		void init();
 };
 

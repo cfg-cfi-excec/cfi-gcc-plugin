@@ -7,28 +7,30 @@
 
   void GCC_PLUGIN_HECFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     // Don't instrument function entry of _main with a CFICHK
-    if (strcmp(function_name.c_str(), "_main") != 0) {
+    if (strcmp(function_name.c_str(), "_main") == 0) {
+      // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
+      generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
+      // enable CFI from here on
+      generateAndEmitAsm(CFI_ENABLE, firstInsn, firstBlock, false);
+    } else if (strcmp(function_name.c_str(), "exit") == 0) {
+      // reset CFI state because exit() breaks out of CFG
+      generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
+    } else {
       int label = getLabelForIndirectlyCalledFunction(function_name, file_name);
 
       if (label >= 0) {
         generateAndEmitAsm("CFICHK " + std::to_string(label), firstInsn, firstBlock, false);
       }
-    } else {
-      // enable CFI from here on
-      //TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
-      generateAndEmitAsm("CFI_DBG6 t0", firstInsn, firstBlock, false);
     }
   }
 
   void GCC_PLUGIN_HECFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     if (function_name.compare("_main") == 0) {
       // disable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-      generateAndEmitAsm("CFI_DBG7 t0", lastInsn, lastBlock, false);
+      generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     }
   }
 
-  //TODO: only generate trampolines if the targeted functions occure in multiple calls
   void GCC_PLUGIN_HECFI::emitTrampolines(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn) {
     //Generate Trampolines for an indirect call in this function
     std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
@@ -65,8 +67,7 @@
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (isFunctionExcludedFromCFI(function_name)) {
       // disable CFI from here on
-      //TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-      generateAndEmitAsm("CFI_DBG7 t0", insn, block, false);
+      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
 
       rtx_insn *tmpInsn = NEXT_INSN(insn);
       while (NOTE_P(tmpInsn)) {
@@ -74,7 +75,7 @@
       }
 
       // Enable CFI again after excluded function
-      generateAndEmitAsm("CFI_DBG6 t0", tmpInsn, block, false);
+      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
     } else {
       writeLabelToTmpFile(readLabelFromTmpFile()+1);
       unsigned label = readLabelFromTmpFile();
@@ -109,20 +110,28 @@
     insn = generateAndEmitAsm("CFIBR " + std::to_string(label), insn, block, false);
     
     if (labelPRC >= 0) {
-      std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
+      bool trampolinesNeeded = areTrampolinesNeeded(file_name, function_name, line_number);
+      //std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
-      // increase stack pointer
-      generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
-      // push old register content to stack
-      generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
-      // re-route jump: write address of trampoline to register
-      generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
-      // add CFIPRC instruction
-      generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+      if (trampolinesNeeded) {
+        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
 
-      basic_block lastBlock = lastRealBlockInFunction();
-      rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
-      emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
+        // increase stack pointer
+        generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
+        // push old register content to stack
+        generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
+        // re-route jump: write address of trampoline to register
+        generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
+        // add CFIPRC instruction
+        generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+
+        basic_block lastBlock = lastRealBlockInFunction();
+        rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
+        emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
+      } else {
+        // add CFIPRC instruction without trampolines
+        generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
+      }
     } else {
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
         << function_name.c_str() << ":" << std::to_string( line_number) << "\n";

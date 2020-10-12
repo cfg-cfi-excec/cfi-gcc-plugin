@@ -153,7 +153,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               //std::cerr << "CALLING indirectly (" << file_name << ":" << function_name << ":" << std::to_string(LOCATION_LINE(INSN_LOCATION (insn))) << ")" << std::endl;
             } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
               // This is a direct JALR
-              //std::cerr << "CALLING directly: " << fName << std::endl;
+              if (!isFunctionExcludedFromCFI(XSTR(subExpr, 0))) {
+                std::cerr << "Missing exclusion: " << XSTR(subExpr, 0) << std::endl;
+                exit(1);
+              }
+
               onDirectFunctionCall(file_name, XSTR(subExpr, 0), bb, insn); 
             }
           } else if (JUMP_P(insn)) {
@@ -246,6 +250,43 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
   }
 
+  bool GCC_PLUGIN::isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name) {
+    std::vector<CFG_FUNCTION_CALL> calls = getIndirectFunctionCalls();
+    unsigned numberOfUses = 0;
+
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      for(CFG_SYMBOL function : function_call.calls) {
+        if (function.file_name.compare(file_name) == 0 
+            && function.symbol_name.compare(function_name) == 0) {
+          numberOfUses++;
+        }
+      }
+    }
+
+    return (numberOfUses > 1);
+  }
+
+  bool GCC_PLUGIN::areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number) {
+    std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
+
+    for(CFG_FUNCTION_CALL function_call : function_calls) {
+      if (function_call.function_name.compare(function_name) == 0) {
+        if (function_call.line_number == line_number) {
+          for(CFG_SYMBOL call : function_call.calls) {
+            bool trampolineNeeded = isFunctionUsedInMultipleIndirectCalls(call.file_name, call.symbol_name);
+            
+            if (trampolineNeeded) {
+              // generate trampoline even when only one single function is used within multiple indirect calls
+              return true;
+            }        
+          }
+        }
+      }
+    } 
+
+    return false;
+  }
+
   int GCC_PLUGIN::getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name) {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
       if (label_jump.file_name.compare(file_name) == 0) {
@@ -312,7 +353,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
-  // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
+  // TODO: remove exclusion list here again once libgcc is also compiled with LTO
+  //    This is a temoporary fix for soft fp lib and cmath functions
   bool GCC_PLUGIN::isFunctionExcludedFromCFI(std::string function_name) {
     std::vector<std::string> exclusions {
       "__floatsidf",
@@ -323,7 +365,27 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__muldf3",
       "__gedf2",
       "__ltdf2",
-      "__ledf2"
+      "__ledf2",
+      "__multf3",
+      "__subtf3",
+      "__addtf3",
+      "__extenddftf2",
+      "__extendsfdf2",
+      "__lttf2",
+      "__divtf3",
+      "__truncdfsf2",
+      "__trunctfdf2",
+      "__floatunsidf",
+      "__eqdf2",
+      "pow",
+      "sqrt",
+      "cos",
+      "sin",
+      "acos",
+      "tan",
+      "atan",
+      "fabs",
+      "fabsf"
     };
 
     if (std::find(std::begin(exclusions), std::end(exclusions), function_name) != std::end(exclusions)) {
