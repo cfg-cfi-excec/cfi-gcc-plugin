@@ -16,7 +16,6 @@
       // reset CFI state because exit() breaks out of CFG
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
     } else {
-      // TODO: replace with ENDBRANCH
       generateAndEmitAsm(ENDBRANCH, firstInsn, firstBlock, false);
     }
   }

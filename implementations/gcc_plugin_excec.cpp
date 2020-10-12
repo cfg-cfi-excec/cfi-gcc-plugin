@@ -80,14 +80,14 @@
         // re-route jump: write address of trampoline to register
         generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
         // add CFIPRC instruction
-        generateAndEmitAsm("CFIPRC " + std::to_string(label), insn, block, false);
+        generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
 
         basic_block lastBlock = lastRealBlockInFunction();
         rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
         emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
       } else {
         // add CFIPRC instruction without trampolines
-        generateAndEmitAsm("CFIPRC " + std::to_string(label), insn, block, false);
+        generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
     } else {
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
@@ -107,8 +107,7 @@
     int label = getLabelForIndirectJump(file_name, function_name);
 
     if (label >= 0) {
-      //TODO: change to custom instruction
-      generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
+      generateAndEmitAsm("CFIJUMP_I " + std::to_string(label), insn, block, false);
     } else {
        printf("\033[31m Warning: NO CFI RULES FOR INDIRECT JUMP IN %s:%s \x1b[0m\n",file_name.c_str(), function_name.c_str());
     }

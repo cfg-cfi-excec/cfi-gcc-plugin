@@ -15,8 +15,7 @@ class GCC_PLUGIN_ICET : public GCC_PLUGIN {
 		void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn);
 
 	private:
-		//TODO: replace CFICHK with ENDBRANCH instruction
-		const char *ENDBRANCH = "CFICHK 0x0";
+		const char *ENDBRANCH = "CFIENDBRANCH";
 };
 
 #endif /* GCC_PLUGIN_ICET_H_ */

@@ -67,12 +67,9 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		int argc;
 		struct plugin_argument *argv;
 
-		//TODO: replace CFI_DBG5 with some sort of CFI_RESET instruction
-		const char *CFI_RESET = "CFI_DBG5 t0";
-		//TODO: replace CFI_DBG6 with some sort of CFI_ENABLE instruction
-		const char *CFI_ENABLE = "CFI_DBG6 t0";
-		//TODO: replace CFI_DBG7 with some sort of CFI_DISABLE instruction
-		const char *CFI_DISABLE = "CFI_DBG7 t0";
+		const char *CFI_RESET = "CFI_RESET";
+		const char *CFI_ENABLE = "CFI_ENABLE";
+		const char *CFI_DISABLE = "CFI_DISABLE";
 
 		// These functions are optionally overwritten in derived classes
 		virtual void onFunctionEntry			(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {}
