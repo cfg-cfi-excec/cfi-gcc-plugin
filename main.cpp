@@ -15,12 +15,12 @@
 #include <print-tree.h>
 
 #include "gcc_plugin.h"
-#include "./implementations/gcc_plugin_hcfi.h"
-#include "./implementations/gcc_plugin_hafix.h"
-#include "./implementations/gcc_plugin_hecfi.h"
-#include "./implementations/gcc_plugin_fixer.h"
-#include "./implementations/gcc_plugin_excec.h"
-#include "./implementations/gcc_plugin_icet.h"
+#include "gcc_plugin_hcfi.h"
+#include "gcc_plugin_hafix.h"
+#include "gcc_plugin_hecfi.h"
+#include "gcc_plugin_fixer.h"
+#include "gcc_plugin_excec.h"
+#include "gcc_plugin_icet.h"
 
 // We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
@@ -40,8 +40,20 @@ int plugin_init(struct plugin_name_args *plugin_info,
                 struct plugin_gcc_version *version) {
 	std::cerr << "\nCFI REGISTER CALLBACK" << "\n";
 	if(!plugin_default_version_check(version, &gcc_version)) {
-		std::cerr << "This GCC plugin is for version " << GCCPLUGIN_VERSION_MAJOR
-			<< "." << GCCPLUGIN_VERSION_MINOR << "\n";
+		fprintf(stderr, "This GCC plugin is for version %s built on %s (with %s; devphase \"%s\", revision \"%s\").\n",
+			gcc_version.basever,
+			gcc_version.datestamp,
+			gcc_version.configuration_arguments,
+			gcc_version.devphase,
+			gcc_version.revision
+		);
+		fprintf(stderr, "That does not match the one used: version %s built on %s (with %s; devphase \"%s\", revision \"%s\").\n",
+			version->basever,
+			version->datestamp,
+			version->configuration_arguments,
+			version->devphase,
+			version->revision
+		);
 		return 1;
 	}
 
@@ -49,7 +61,9 @@ int plugin_init(struct plugin_name_args *plugin_info,
 		if (std::strcmp(plugin_info->argv[i].key, "cfi_implementation") == 0) {
 			const char* implementation = plugin_info->argv[i].value;
 
-			if (std::strcmp(implementation, "HCFI") == 0) {
+			if (std::strcmp(implementation, "NONE") == 0) {
+				return 0;
+			} else if (std::strcmp(implementation, "HCFI") == 0) {
 						std::string implementation = plugin_info->argv[i].value;
 				gcc_plugin = new GCC_PLUGIN_HCFI(g, plugin_info->argv, plugin_info->argc);
 				std::cerr << "\nUsing CFI Implementation HCFI" << "\n";

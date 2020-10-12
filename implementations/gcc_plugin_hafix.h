@@ -1,7 +1,7 @@
 #ifndef GCC_PLUGIN_HAFIX_H_
 #define GCC_PLUGIN_HAFIX_H_
 
-#include "../gcc_plugin.h"
+#include "gcc_plugin.h"
 
 class GCC_PLUGIN_HAFIX : public GCC_PLUGIN {
 	public:
