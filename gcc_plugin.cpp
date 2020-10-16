@@ -407,14 +407,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     std::string jumps_title = "# indirect jumps";
     std::string attr_line = "line:";
     std::string attr_label = "label:";
-    std::string attr_offset = "offset:";
 
     bool section_calls = false;
     bool section_jumps = false;
     bool section_functions = false;
 
     size_t pos = 0;
-    std::string token, token_name, token_file, file_name, function_name, line_number, label, offset;
+    std::string token, token_name, token_file, file_name, function_name, line_number, label;
     std::string delimiter = " ";
     std::string delimiter_entry = ":";
 
@@ -478,13 +477,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           pos = line_number.find(attr_line);
           line_number.erase(pos, attr_line.length());
 
-          // extract offset in function
-          pos = line.find(delimiter);
-          offset = line.substr(0, pos);
-          line.erase(0, pos + delimiter.length());
-          pos = offset.find(attr_offset);
-          offset.erase(pos, attr_offset.length());
-
           // extract call label
           pos = line.find(delimiter);
           label = line.substr(0, pos-1);
@@ -496,7 +488,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           cfg_function.file_name = file_name;
           cfg_function.function_name = function_name;
           cfg_function.line_number = std::stoi(line_number);
-          cfg_function.offset = std::stoi(offset);
           cfg_function.label = std::stoi(label);
 
           // extract possible function calls

@@ -44,7 +44,6 @@ struct CFG_FUNCTION_CALL {
     std::string function_name;
     int line_number;
     int label;
-    int offset;
     std::vector<CFG_SYMBOL> calls;
 };
 

@@ -16,7 +16,7 @@
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
-          generateAndEmitAsm("CFIMATLDCALLER " + function_name + " +" + std::to_string(function_call.offset), firstInsn, firstBlock, false);
+          generateAndEmitAsm("CFIMATLDCALLER " + std::to_string(function_call.label), firstInsn, firstBlock, false);
           generateAndEmitAsm("CFIMATLDCALLEE " + call.symbol_name, firstInsn, firstBlock, false);
         }
       }
@@ -70,7 +70,7 @@
 
       if (((rtx_code)subExpr->code) == REG) {
         std::string regName = getRegisterNameForNumber(REGNO(subExpr));
-        insn = generateAndEmitAsm("CFIFWD " + regName, insn, block, false);
+        insn = generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
     } else {
       onDirectFunctionCall(file_name, function_name, block, insn);
