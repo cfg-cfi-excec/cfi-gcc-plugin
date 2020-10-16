@@ -1,13 +1,5 @@
-gcc-5.4.0
-gcc-build
-gcc-install
-
-
 *.dot
 *.o
 *.out
 *.pdf
 *.so
-test.cc
-test
-

@@ -6,7 +6,6 @@
 #include <string.h>
 #include <fstream>
 #include <vector>
-#include <algorithm>
 
 // This is the first gcc header to be included
 #include "gcc-plugin.h"

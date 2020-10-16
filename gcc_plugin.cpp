@@ -354,7 +354,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
   }
 
   // TODO: remove exclusion list here again once libgcc is also compiled with LTO
-  //    This is a temoporary fix for soft fp lib and cmath functions
+  //    This is a temoporary fix for soft fp lib and math functions
   bool GCC_PLUGIN::isFunctionExcludedFromCFI(std::string function_name) {
     std::vector<std::string> exclusions {
       "__floatsidf",
@@ -388,8 +388,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "fabsf"
     };
 
-    if (std::find(std::begin(exclusions), std::end(exclusions), function_name) != std::end(exclusions)) {
-      return true;
+    for (std::string excl : exclusions) {
+      if (excl.compare(function_name) == 0) {
+        //std::cerr << "FOUND EXCLUSION: " << excl << std::endl;
+        return true;
+      }
     }
 
     return false;
