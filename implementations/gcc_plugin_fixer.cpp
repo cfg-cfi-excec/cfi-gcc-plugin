@@ -36,8 +36,8 @@
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     } else {
-      // NOP is required for creating the same performance overhead as original FIXER approach
-      generateAndEmitAsm("NOP", lastInsn, lastBlock, false);
+      // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
+      generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
   }
@@ -46,9 +46,9 @@
     // Don't instrument function call of _main
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (function_name.compare("_main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
-      // NOPs are required for creating the same performance overhead as original FIXER approach
-      generateAndEmitAsm("NOP", insn, block, false);
-      generateAndEmitAsm("NOP", insn, block, false);
+      // The first two instructions are only needed to match the number of instructions in the original FIXER approach
+      generateAndEmitAsm("AUIPC t0,0", insn, block, false);
+      generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
       generateAndEmitAsm("CFICALL", insn, block, false);
     }
   }
@@ -75,9 +75,11 @@
 
       if (((rtx_code)subExpr->code) == REG) {
         std::string regName = getRegisterNameForNumber(REGNO(subExpr));
-        // NOPs are required for creating the same performance overhead as original FIXER approach
-        generateAndEmitAsm("NOP", insn, block, false);
-        generateAndEmitAsm("NOP", insn, block, false);
+        // The first two instructions are only needed to match the number of instructions in the original FIXER approach
+        generateAndEmitAsm("AUIPC t0,0", insn, block, false);
+        generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
+        // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
+        generateAndEmitAsm("BNE zero,zero,exit", insn, block, false);
         generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
     } else {
