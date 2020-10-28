@@ -143,9 +143,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else if (strcmp(fName, "longjmp") == 0) {
                 onLongJumpFunctionCall(file_name, function_name, bb, insn);
               } else {
-                // This is a direct JAL
-                onDirectFunctionCall(file_name, fName, bb, insn);
-                //std::cerr << "CALLING directly: " << fName << std::endl;
+                if (GET_CODE (set) != SET) {  
+                  // This is a direct JAL
+                  onDirectFunctionCall(file_name, fName, bb, insn);
+                  //std::cerr << "CALLING directly: " << fName << std::endl;
+                }
               }
             } else if (!isDirectCall) {
               onIndirectFunctionCall(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
