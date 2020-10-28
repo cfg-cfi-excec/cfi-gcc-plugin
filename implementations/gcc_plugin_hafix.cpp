@@ -4,7 +4,7 @@
       : GCC_PLUGIN(ctxt, arguments, argcounter) {}
 
   void GCC_PLUGIN_HAFIX::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    if (strcmp(function_name.c_str(), "_main") == 0) {
+    if (strcmp(function_name.c_str(), "__main") == 0) {
       // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
       // enable CFI from here on
@@ -24,11 +24,11 @@
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
 
-    if (function_name.compare("_main") != 0) {
+    if (function_name.compare("__main") != 0) {
       generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
     }
 
-    if (function_name.compare("_main") == 0) {
+    if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     }

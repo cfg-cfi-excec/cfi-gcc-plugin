@@ -6,13 +6,13 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    if (strcmp(function_name.c_str(), "_main") == 0) {
+    if (strcmp(function_name.c_str(), "__main") == 0) {
       // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
       // enable CFI from here on
       generateAndEmitAsm(CFI_ENABLE, firstInsn, firstBlock, false);
 
-      // Load the policy matrix on entry of _main
+      // Load the policy matrix on entry of __main
       std::vector<CFG_FUNCTION_CALL> function_calls = getIndirectFunctionCalls();
       for(CFG_FUNCTION_CALL function_call : function_calls) {
         for(CFG_SYMBOL call : function_call.calls) {
@@ -31,8 +31,8 @@
   }
 
   void GCC_PLUGIN_FIXER::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function return of _main
-    if (function_name.compare("_main") == 0) {
+    // Don't instrument function return of __main
+    if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     } else {
@@ -43,9 +43,9 @@
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Don't instrument function call of _main
+    // Don't instrument function call of __main
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if (function_name.compare("_main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
+    if (function_name.compare("__main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
       // The first two instructions are only needed to match the number of instructions in the original FIXER approach
       generateAndEmitAsm("AUIPC t0,0", insn, block, false);
       generateAndEmitAsm("ADD t0,t0,14", insn, block, false);

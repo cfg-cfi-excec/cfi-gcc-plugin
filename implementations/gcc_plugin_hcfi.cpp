@@ -6,8 +6,8 @@
   }
 
   void GCC_PLUGIN_HCFI::onFunctionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
-    // Don't instrument function entry of _main with a CHECKLABEL
-    if (strcmp(function_name.c_str(), "_main") == 0) {
+    // Don't instrument function entry of __main with a CHECKLABEL
+    if (strcmp(function_name.c_str(), "__main") == 0) {
       // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
       // enable CFI from here on
@@ -30,8 +30,8 @@
   }
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    // Don't instrument function return of _main
-    if (function_name.compare("_main") != 0) {
+    // Don't instrument function return of __main
+    if (function_name.compare("__main") != 0) {
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     } else {
       // disable CFI from here on
