@@ -20,7 +20,7 @@
 
       // only instrument functions, which are known to be called indirectly
       if (label >= 0) {
-        generateAndEmitAsm("CFICHK " + std::to_string(label), firstInsn, firstBlock, false);
+        generateAndEmitAsm("CFICHECK " + std::to_string(label), firstInsn, firstBlock, false);
       }
     }
   }
