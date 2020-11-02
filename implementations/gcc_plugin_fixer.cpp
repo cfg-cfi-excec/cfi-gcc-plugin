@@ -50,6 +50,8 @@
       generateAndEmitAsm("AUIPC t0,0", insn, block, false);
       generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
       generateAndEmitAsm("CFICALL", insn, block, false);
+    } else {
+      // TODO: add dummy instructions to match number of injected instructions
     }
   }
 
