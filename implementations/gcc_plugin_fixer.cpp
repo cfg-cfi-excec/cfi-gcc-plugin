@@ -35,7 +35,8 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else {
+    } else if (!isFunctionExcludedFromCFI(function_name)) {
+      // TODO: check if we can get rid of isFunctionExcludedFromCFI check here
       // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
       //generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
@@ -84,7 +85,8 @@
         //generateAndEmitAsm("BNE zero,zero,exit", insn, block, false);
         generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
-    } else {
+    } else if (function_name.compare("__rt_event_execute.constprop") != 0) {
+      // TODO: check if we can get rid of the exclusion here
       onDirectFunctionCall(file_name, function_name, block, insn);
     }
   }
