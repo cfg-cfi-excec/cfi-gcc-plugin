@@ -16,6 +16,7 @@ class GCC_PLUGIN_ICET : public GCC_PLUGIN {
 
 	private:
 		const char *ENDBRANCH = "CFIENDBRANCH";
+		void init();
 };
 
 #endif /* GCC_PLUGIN_ICET_H_ */
