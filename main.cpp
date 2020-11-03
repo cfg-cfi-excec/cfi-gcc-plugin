@@ -112,8 +112,8 @@ int plugin_init(struct plugin_name_args *plugin_info,
 	struct register_pass_info pass_info;
 
 	pass_info.pass = gcc_plugin;
-	pass_info.reference_pass_name = "*free_cfg";
-	//pass_info.reference_pass_name = "eh_ranges";
+	//pass_info.reference_pass_name = "*free_cfg";
+	pass_info.reference_pass_name = "eh_ranges";
 	pass_info.ref_pass_instance_number = 1;
 	pass_info.pos_op = PASS_POS_INSERT_AFTER;
 
