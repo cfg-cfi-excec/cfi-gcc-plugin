@@ -37,7 +37,7 @@
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     } else {
       // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
-      generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
+      //generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
     }
   }
@@ -47,8 +47,8 @@
     // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
     if (function_name.compare("__main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
       // The first two instructions are only needed to match the number of instructions in the original FIXER approach
-      generateAndEmitAsm("AUIPC t0,0", insn, block, false);
-      generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
+      //generateAndEmitAsm("AUIPC t0,0", insn, block, false);
+      //generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
       generateAndEmitAsm("CFICALL", insn, block, false);
     } else {
       // TODO: add dummy instructions to match number of injected instructions
@@ -78,10 +78,10 @@
       if (((rtx_code)subExpr->code) == REG) {
         std::string regName = getRegisterNameForNumber(REGNO(subExpr));
         // The first two instructions are only needed to match the number of instructions in the original FIXER approach
-        generateAndEmitAsm("AUIPC t0,0", insn, block, false);
-        generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
+        //generateAndEmitAsm("AUIPC t0,0", insn, block, false);
+        //generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
         // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
-        generateAndEmitAsm("BNE zero,zero,exit", insn, block, false);
+        //generateAndEmitAsm("BNE zero,zero,exit", insn, block, false);
         generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
     } else {
