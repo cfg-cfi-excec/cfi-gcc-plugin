@@ -31,12 +31,12 @@
 
   void GCC_PLUGIN_HCFI::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     // Don't instrument function return of __main
-    // TODO: check if we can get rid of isFunctionExcludedFromCFI check here
-    if (function_name.compare("__main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
-      generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
-    } else {
+    if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
+    } else if (!isFunctionExcludedFromCFI(function_name)) {
+      // TODO: check if we can get rid of isFunctionExcludedFromCFI check here
+      generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
 
