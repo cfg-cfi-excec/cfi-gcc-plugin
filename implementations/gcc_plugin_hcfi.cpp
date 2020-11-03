@@ -53,7 +53,8 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
-    } else {
+    } else if (function_name.compare("__rt_event_execute.constprop") != 0) {
+      // TODO: check if we can get rid of the exclusion here
       generateAndEmitAsm("SETPC", insn, block, false);
     }
   }
