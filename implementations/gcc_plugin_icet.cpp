@@ -11,6 +11,8 @@
       // reset CFI state (e.g., exit(1) might have left CFI module in a dirty state)
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
       // enable CFI from here on
+
+      //TODO: enable CFI again here
       //generateAndEmitAsm(CFI_ENABLE, firstInsn, firstBlock, false);
     } else if (strcmp(function_name.c_str(), "exit") == 0) {
       // reset CFI state because exit() breaks out of CFG
