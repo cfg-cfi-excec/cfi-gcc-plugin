@@ -379,6 +379,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__trunctfdf2",
       "__floatunsidf",
       "__eqdf2",
+      "__nedf2",
       "pow",
       "sqrt",
       "cos",
@@ -387,7 +388,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "tan",
       "atan",
       "fabs",
-      "fabsf"
+      "fabsf",
+      "__rt_io_end_of_flush"  //TODO: check if we can get rid of this
     };
 
     for (std::string excl : exclusions) {
