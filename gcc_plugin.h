@@ -101,7 +101,10 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		int getLabelForIndirectJump(std::string file_name, std::string function_name);
 		bool isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name);
 		bool areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number);
-		bool isFunctionExcludedFromCFI(std::string function_name);
+
+		bool isLibGccFunction(std::string function_name);
+		bool isExcludedFromBackwardEdgeCfi(std::string function_name);
+		bool isExcludedFromForwardEdgeCfi(std::string function_name);
 
 	private:
 		std::vector<CFG_FUNCTION_CALL> function_calls;

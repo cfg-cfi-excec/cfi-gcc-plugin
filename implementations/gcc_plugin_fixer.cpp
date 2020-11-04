@@ -35,8 +35,7 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else if (!isFunctionExcludedFromCFI(function_name)) {
-      // TODO: check if we can get rid of isFunctionExcludedFromCFI check here
+    } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
       // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
       //generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
       generateAndEmitAsm("CFIRET", lastInsn, lastBlock, false);
@@ -44,9 +43,8 @@
   }
 
   void GCC_PLUGIN_FIXER::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Don't instrument function call of __main
-    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if (function_name.compare("__main") != 0 && !isFunctionExcludedFromCFI(function_name)) {
+    // Don't instrument function calls of __main and functions in libgcc
+    if (function_name.compare("__main") != 0 && !isLibGccFunction(function_name)) {
       // The first two instructions are only needed to match the number of instructions in the original FIXER approach
       //generateAndEmitAsm("AUIPC t0,0", insn, block, false);
       //generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
@@ -85,8 +83,7 @@
         //generateAndEmitAsm("BNE zero,zero,exit", insn, block, false);
         generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
-    } else if (function_name.compare("__rt_event_execute.constprop") != 0) {
-      // TODO: check if we can get rid of the exclusion here
+    } else if (!isExcludedFromForwardEdgeCfi(function_name)) {
       onDirectFunctionCall(file_name, function_name, block, insn);
     }
   }

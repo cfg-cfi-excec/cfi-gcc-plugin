@@ -34,15 +34,14 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else if (!isFunctionExcludedFromCFI(function_name)) {
-      // TODO: check if we can get rid of isFunctionExcludedFromCFI check here
+    } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if(!isFunctionExcludedFromCFI(function_name)) {
+    // Don't instrument functions in libgcc
+    if(!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
     } else {
       // TODO: add dummy instructions to match number of injected instructions
@@ -53,8 +52,7 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
-    } else if (function_name.compare("__rt_event_execute.constprop") != 0) {
-      // TODO: check if we can get rid of the exclusion here
+    } else if (!isExcludedFromForwardEdgeCfi(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
     }
   }

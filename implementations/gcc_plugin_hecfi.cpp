@@ -64,8 +64,8 @@
   }
 
   void GCC_PLUGIN_HECFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if (isFunctionExcludedFromCFI(function_name)) {
+    // Don't instrument functions in libgcc
+    if (isLibGccFunction(function_name)) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, insn, block, false);
 

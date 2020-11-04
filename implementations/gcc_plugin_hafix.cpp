@@ -40,11 +40,8 @@
       tmpInsn = NEXT_INSN(tmpInsn);
     }
 
-    // TODO: remove exclusion list here (tmp fix for soft fp lib functions)
-    if (!isFunctionExcludedFromCFI(function_name)) {
+    if (!isLibGccFunction(function_name) && !isExcludedFromForwardEdgeCfi(function_name)) {
       generateAndEmitAsm("CFIRET " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
-    } else {
-      // TODO: add dummy instructions to match number of injected instructions
     }
   }
 

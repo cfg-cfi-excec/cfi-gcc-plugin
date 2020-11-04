@@ -154,8 +154,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               //std::cerr << "CALLING indirectly" << std::endl;
               //std::cerr << "CALLING indirectly (" << file_name << ":" << function_name << ":" << std::to_string(LOCATION_LINE(INSN_LOCATION (insn))) << ")" << std::endl;
             } else if (((rtx_code)subExpr->code) == SYMBOL_REF) {
-              // This is a direct JALR
-              if (!isFunctionExcludedFromCFI(XSTR(subExpr, 0))) {
+              // This is a JALR to a shared library function
+              if (!isLibGccFunction(XSTR(subExpr, 0))) {
                 std::cerr << "Missing exclusion: " << XSTR(subExpr, 0) << std::endl;
                 exit(1);
               }
@@ -355,9 +355,47 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
+  // This exclusions is required because of a bug in our FIXER/HAFIX/HCFI implementation.
+  // Due to a problem with the shadow stack when calling the excluded function(s) indirectly,
+  // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
+  // TODO: Fix for broken shadow stack in hardware
+  bool GCC_PLUGIN::isExcludedFromBackwardEdgeCfi(std::string function_name) {
+    std::vector<std::string> exclusions {
+      "__rt_io_end_of_flush"
+    };
+
+    for (std::string excl : exclusions) {
+      if (excl.compare(function_name) == 0) {
+        //std::cerr << "FOUND EXCLUSION: " << excl << std::endl;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // This exclusions is required because of a bug in our FIXER/HAFIX/HCFI implementation.
+  // Due to a problem with the shadow stack when calling the functions indirectly from the excluded function,
+  // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
+  // TODO: Fix for broken shadow stack in hardware
+  bool GCC_PLUGIN::isExcludedFromForwardEdgeCfi(std::string function_name) {
+    std::vector<std::string> exclusions {
+      "__rt_event_execute.constprop"
+    };
+
+    for (std::string excl : exclusions) {
+      if (excl.compare(function_name) == 0) {
+        //std::cerr << "FOUND EXCLUSION: " << excl << std::endl;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // TODO: remove exclusion list here again once libgcc is also compiled with LTO
   //    This is a temoporary fix for soft fp lib and math functions
-  bool GCC_PLUGIN::isFunctionExcludedFromCFI(std::string function_name) {
+  bool GCC_PLUGIN::isLibGccFunction(std::string function_name) {
     std::vector<std::string> exclusions {
       "__floatsidf",
       "__adddf3",
