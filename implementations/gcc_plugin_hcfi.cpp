@@ -65,7 +65,16 @@
 
   void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
-    generateAndEmitAsm("SJCFI " + std::to_string(readLabelFromTmpFile()), insn, block, false);
+      
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    // place cfisetjmp below actual setjmp() call
+    // this is the place where longjmp() jumps to
+
+    generateAndEmitAsm("SJCFI " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
   }
 
   void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
