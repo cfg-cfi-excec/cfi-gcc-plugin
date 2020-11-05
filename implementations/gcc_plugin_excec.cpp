@@ -43,7 +43,7 @@
           rtx_insn *insn = generateAndEmitAsm("_trampolines_" + std::string(function_name) + "_"  
             + std::to_string(function_call.line_number) + ":", lastInsn, lastBlock, true);
           // add CFICHK at the very beginning
-          insn = generateAndEmitAsm("CFICHK " + std::to_string(function_call.label), insn, lastBlock, true);
+          insn = generateAndEmitAsm("CFICHECK " + std::to_string(function_call.label), insn, lastBlock, true);
           // restore original register content
           insn = generateAndEmitAsm("lw	" + register_name + ",0(sp)", insn, lastBlock, true);
           insn = generateAndEmitAsm("addi	sp,sp,4", insn, lastBlock, true);
@@ -56,7 +56,7 @@
           }
 
           // This is the "else-branch": if we arrive here, there is a CFI violation
-          generateAndEmitAsm("CFIRET 0xFFFF", insn, lastBlock, true);
+          generateAndEmitAsm("CFIRET", insn, lastBlock, true);
 
           break;
         }
@@ -90,8 +90,8 @@
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
     } else {
-      std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
-        << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+        std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
+          << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
     }
   }
 
@@ -99,7 +99,7 @@
     int label = getLabelForIndirectJumpSymbol(file_name, function_name, label_name);
 
     if (label >= 0) {
-      generateAndEmitAsm("CFICHK " + std::to_string(label), insn, block, false);
+      generateAndEmitAsm("CFICHECK " + std::to_string(label), insn, block, false);
     }
   }
   
