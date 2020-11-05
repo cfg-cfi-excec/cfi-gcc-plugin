@@ -134,7 +134,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             if (func != 0) {
               char *fName = (char*)IDENTIFIER_POINTER (DECL_NAME (func) );
 
-              //TODO: Is this a sufficient check for setjmp/longjmp?
               if (strcmp(fName, function_name) == 0) {
                 recursiveFunction = true;
                 onRecursiveFunctionCall(file_name, function_name, bb, insn);
