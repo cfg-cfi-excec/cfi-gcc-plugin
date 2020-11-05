@@ -114,6 +114,15 @@
     }
   }
 
+  void GCC_PLUGIN_EXCEC::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    generateAndEmitAsm("cfisetjmp " + std::to_string(readLabelFromTmpFile()), insn, block, false);
+  }
+
+  void GCC_PLUGIN_EXCEC::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    generateAndEmitAsm("cfilongjmp", insn, block, false);
+  }
+
   void GCC_PLUGIN_EXCEC::init()
   {
     for (int i = 0; i < argc; i++) {
