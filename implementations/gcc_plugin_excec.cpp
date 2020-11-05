@@ -109,7 +109,8 @@
     if (label >= 0) {
       generateAndEmitAsm("CFIJUMP_I " + std::to_string(label), insn, block, false);
     } else {
-       printf("\033[31m Warning: NO CFI RULES FOR INDIRECT JUMP IN %s:%s \x1b[0m\n",file_name.c_str(), function_name.c_str());
+      std::cerr << "Warning: NO CFI RULES FOR INDIRECT JUMP IN " << file_name.c_str() << ":" 
+        << function_name.c_str() << "\n";
     }
   }
 
