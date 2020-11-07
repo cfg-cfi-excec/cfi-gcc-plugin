@@ -27,6 +27,6 @@ gcc_plugin.so: ./asmgen/InstrType.o ./asmgen/UpdatePoint.o  ./asmgen/AsmGen.o ./
 	$(CXX) $(INCLUDE_DIR) $(CXXFLAGS) -fPIC -c -o $@ $<
 
 clean:
-	rm -f *.so *.o ./implementations/*.o
+	rm -f *.so *.o ./implementations/*.o ./asmgen/*.o
  
 .PHONY: all clean
