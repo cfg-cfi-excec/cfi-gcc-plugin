@@ -6,14 +6,7 @@
 
 #include "AsmGen.h"
 
-/**
- * Emits: .codeLabel
- */
-rtx_insn* AsmGen::emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after){
-	rtx codeLab = gen_label_rtx();
-	rtx_insn* insn = emitLabel(codeLab, attachRtx, after);
-	return insn;
-}
+
 
 /**
  * Emits the provided assembly instruction
@@ -43,14 +36,3 @@ rtx_insn* AsmGen::emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool
 	}
 }
 
-/*
- * Actually emits the codelabel at the desired place
- */
-rtx_insn* AsmGen::emitLabel(rtx label, rtx_insn* attachRtx, bool after){
-	if(after){
-		return emit_label_after(label, attachRtx);
-	}
-	else{
-		return emit_label_before(label, attachRtx);
-	}
-}

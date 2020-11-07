@@ -28,12 +28,10 @@
 
 class AsmGen{
 	public:
-		static rtx_insn* emitCodeLabel(unsigned int insnID, rtx_insn* attachRtx, basic_block bb, bool after);
 		static rtx_insn* emitAsmInput(const char* asmInstr, rtx_insn* attachRtx, basic_block bb, bool after);
 
 	private:
 		static rtx_insn* emitInsn(rtx rtxInsn,rtx_insn* attachRtx, basic_block bb, bool after);
-		static rtx_insn* emitLabel(rtx label, rtx_insn* attachRtx, bool after);
 };
 
 
