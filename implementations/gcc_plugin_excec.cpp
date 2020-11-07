@@ -56,6 +56,7 @@
           }
 
           // This is the "else-branch": if we arrive here, there is a CFI violation
+          // TODO: replace with other instruction
           generateAndEmitAsm("CFIRET", insn, lastBlock, true);
 
           break;
