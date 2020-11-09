@@ -49,6 +49,11 @@
       //generateAndEmitAsm("AUIPC t0,0", insn, block, false);
       //generateAndEmitAsm("ADD t0,t0,14", insn, block, false);
       generateAndEmitAsm("CFICALL", insn, block, false);
+    } else {
+      // Instead, add NOPs such that the runtime & code size is the same.
+      // Two NOPs are added because backward edge cannot be instrumented.
+      generateAndEmitAsm("add zero,zero,zero", insn, block, false);
+      generateAndEmitAsm("add zero,zero,zero", insn, block, false);
     }
   }
 

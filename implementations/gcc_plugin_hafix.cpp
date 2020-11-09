@@ -42,6 +42,11 @@
 
     if (!isLibGccFunction(function_name) && !isExcludedFromForwardEdgeCfi(function_name)) {
       generateAndEmitAsm("CFIRET " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
+    } else {
+      // Instead, add NOPs such that the runtime & code size is the same.
+      // Two NOPs are added because backward edge cannot be instrumented.
+      generateAndEmitAsm("add zero,zero,zero", insn, block, false);
+      generateAndEmitAsm("add zero,zero,zero", insn, block, false);
     }
   }
 
