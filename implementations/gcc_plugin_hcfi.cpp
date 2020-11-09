@@ -43,8 +43,6 @@
     // Don't instrument functions in libgcc
     if(!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
-    } else {
-      // TODO: add dummy instructions to match number of injected instructions
     }
   }
 
@@ -52,7 +50,7 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
-    } else if (!isExcludedFromForwardEdgeCfi(function_name)) {
+    } else if (!isLibGccFunction(function_name) && !isExcludedFromForwardEdgeCfi(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
         << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
