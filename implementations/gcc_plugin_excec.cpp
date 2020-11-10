@@ -56,8 +56,9 @@
           }
 
           // This is the "else-branch": if we arrive here, there is a CFI violation
-          // TODO: replace with other instruction
-          generateAndEmitAsm("CFIRET", insn, lastBlock, true);
+          // CFICALL_I 0x0 enables the following CFICHECK, which triggers an exception because of the label mismatch
+          generateAndEmitAsm("CFICHECK 0x1", insn, lastBlock, true);
+          generateAndEmitAsm("CFICALL_I 0x0", insn, lastBlock, true);
 
           break;
         }
@@ -80,14 +81,14 @@
         generateAndEmitAsm("SW	" + regName + ",0(sp)", insn, block, false);
         // re-route jump: write address of trampoline to register
         generateAndEmitAsm("LA " + regName +  ", _trampolines_" + std::string(function_name) + "_"  + std::to_string(line_number), insn, block, false);
-        // add CFIPRC instruction
+        // add CFI instruction to announce an indirect call
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
 
         basic_block lastBlock = lastRealBlockInFunction();
         rtx_insn *lastInsn = UpdatePoint::lastRealINSN(lastBlock);
         emitTrampolines(file_name, function_name, line_number, regName, lastBlock, lastInsn);
       } else {
-        // add CFIPRC instruction without trampolines
+        // add CFI instruction to announce an indirect call
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
     } else {
