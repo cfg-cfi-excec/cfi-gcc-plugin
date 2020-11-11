@@ -25,6 +25,10 @@
     }
   }
 
+  void GCC_PLUGIN_EXCEC::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
+    onFunctionEntry(file_name, function_name, firstBlock, firstInsn);
+  }
+
   void GCC_PLUGIN_EXCEC::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on

@@ -79,7 +79,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       basic_block firstBb = single_succ(ENTRY_BLOCK_PTR_FOR_FN(cfun));
       rtx_insn* firstInsn = UpdatePoint::firstRealINSN(firstBb);
 
-      onFunctionEntry(file_name, function_name, firstBb, firstInsn);
       //std::cerr << LOCATION_FILE(INSN_LOCATION (firstInsn)) << ":" << function_name << std::endl;
 
       FOR_EACH_BB_FN(bb, cfun){
@@ -196,6 +195,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
       if (recursiveFunction) {
         onFunctionRecursionEntry(file_name, function_name, firstBb, firstInsn);
+      } else {
+        onFunctionEntry(file_name, function_name, firstBb, firstInsn);
       }
 
       return 0;
