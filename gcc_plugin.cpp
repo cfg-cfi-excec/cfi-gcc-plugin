@@ -418,6 +418,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__floatunsidf",
       "__eqdf2",
       "__nedf2",
+      "__gtdf2",
+      "__fixunsdfsi",
       "pow",
       "sqrt",
       "cos",
