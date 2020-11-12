@@ -14,12 +14,13 @@
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
     }
 
-    writeLabelToTmpFile(readLabelFromTmpFile()+1);
     generateAndEmitAsm("CFIBR " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
     generateAndEmitAsm("CFIREC " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
@@ -33,14 +34,14 @@
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     }
   }
-
+		
   void GCC_PLUGIN_HAFIX::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
     }
 
-    if (!isLibGccFunction(function_name) && !isExcludedFromForwardEdgeCfi(function_name)) {
+    if (!isLibGccFunction(function_name)) {
       generateAndEmitAsm("CFIRET " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
     } else {
       // Instead, add NOPs such that the runtime & code size is the same.
