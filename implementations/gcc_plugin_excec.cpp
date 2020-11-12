@@ -61,8 +61,11 @@
 
           // This is the "else-branch": if we arrive here, there is a CFI violation
           // CFICALL_I 0x0 enables the following CFICHECK, which triggers an exception because of the label mismatch
-          generateAndEmitAsm("CFICHECK 0x1", insn, lastBlock, true);
-          generateAndEmitAsm("CFICALL_I 0x0", insn, lastBlock, true);
+          // generateAndEmitAsm("CFICHECK 0x1", insn, lastBlock, true);
+          // generateAndEmitAsm("CFICALL_I 0x0", insn, lastBlock, true);
+
+          // TODO: find out why CFIRET works here, and CFICHECK/CFICALL_I break execution
+          generateAndEmitAsm("CFIRET", insn, lastBlock, true);
 
           break;
         }
@@ -95,6 +98,14 @@
         // add CFI instruction to announce an indirect call
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
+    } else if (isExcludedFromForwardEdgeCfi(function_name)) {
+      // this is a nasty (indirect) branch, which causes problems when CFI is enabled
+      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
+      rtx_insn *tmpInsn = NEXT_INSN(insn);
+      while (NOTE_P(tmpInsn)) {
+        tmpInsn = NEXT_INSN(tmpInsn);
+      }
+      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
     } else {
         std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
           << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
