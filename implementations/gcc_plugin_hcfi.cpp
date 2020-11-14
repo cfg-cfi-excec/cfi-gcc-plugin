@@ -41,6 +41,17 @@
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     // Don't instrument functions in libgcc
+    /*if (function_name.compare("printf") == 0) {
+      // disable CFI from here on
+      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
+
+      rtx_insn *tmpInsn = NEXT_INSN(insn);
+      while (NOTE_P(tmpInsn)) {
+        tmpInsn = NEXT_INSN(tmpInsn);
+      }
+      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
+
+    } else*/
     if(!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
     } else {
