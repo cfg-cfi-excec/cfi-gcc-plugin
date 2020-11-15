@@ -420,6 +420,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__nedf2",
       "__gtdf2",
       "__fixunsdfsi",
+      "__clzsi2",
       "pow",
       "sqrt",
       "cos",
