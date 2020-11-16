@@ -355,12 +355,16 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
-  // This exclusions is required because of a bug in our FIXER/HAFIX/HCFI implementation.
-  // Due to a problem with the shadow stack when calling the excluded function(s) indirectly,
-  // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
-  // TODO: Fix for broken shadow stack in hardware
   bool GCC_PLUGIN::isExcludedFromBackwardEdgeCfi(std::string function_name) {
     std::vector<std::string> exclusions {
+      // This exclusion is required because the caller is in libgcc, e.g. in the function exp,
+      // but the callee is in the SDK.
+      // Thus, the caller cannot be instrumented.
+      "__errno",
+      // This exclusion is required because of a bug in our FIXER/HAFIX/HCFI implementation.
+      // Due to a problem with the shadow stack when calling the excluded function indirectly,
+      // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
+      // TODO: Fix for broken shadow stack in hardware
       "__rt_io_end_of_flush"
     };
 
