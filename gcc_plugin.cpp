@@ -425,6 +425,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__gtdf2",
       "__fixunsdfsi",
       "__clzsi2",
+      "exp",  // todo: check if this is really needed for all variants. HCFI needs it
       "pow",
       "sqrt",
       "cos",
