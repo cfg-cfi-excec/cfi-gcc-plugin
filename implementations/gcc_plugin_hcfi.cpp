@@ -34,24 +34,12 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
+    } else {
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
 
   void GCC_PLUGIN_HCFI::onDirectFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    // Don't instrument functions in libgcc
-    /*if (function_name.compare("printf") == 0) {
-      // disable CFI from here on
-      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
-
-      rtx_insn *tmpInsn = NEXT_INSN(insn);
-      while (NOTE_P(tmpInsn)) {
-        tmpInsn = NEXT_INSN(tmpInsn);
-      }
-      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
-
-    } else*/
     if(!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
     } else {
@@ -66,7 +54,7 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
-    } else if (!isLibGccFunction(function_name) && !isExcludedFromForwardEdgeCfi(function_name)) {
+    } else if (!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
       std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
         << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
@@ -92,7 +80,6 @@
 
     // place cfisetjmp below actual setjmp() call
     // this is the place where longjmp() jumps to
-
     generateAndEmitAsm("SJCFI " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
   }
 
