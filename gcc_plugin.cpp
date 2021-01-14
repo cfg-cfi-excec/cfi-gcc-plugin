@@ -361,7 +361,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       // but the callee is in the SDK.
       // Thus, the caller cannot be instrumented.
       "__errno",
-      // This exclusion is required because of a bug in our FIXER/HAFIX implementation.
+      // This exclusion is required because of a bug in our HAFIX implementation.
       // Due to a problem with the shadow stack when calling the excluded function indirectly,
       // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
       // TODO: Fix for broken shadow stack in hardware
@@ -378,7 +378,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return false;
   }
 
-  // This exclusions is required because of a bug in our FIXER/HAFIX implementation.
+  // This exclusions is required because of a bug in our HAFIX implementation.
   // Due to a problem with the shadow stack when calling the functions indirectly from the excluded function,
   // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
   // TODO: Fix for broken shadow stack in hardware

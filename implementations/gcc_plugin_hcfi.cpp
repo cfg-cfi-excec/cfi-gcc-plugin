@@ -35,6 +35,11 @@
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     } else {
+      // TODO: find out why exactly this hack is needed
+      if (function_name.compare("plp_udma_enqueue") == 0) {
+        generateAndEmitAsm("NOP", lastInsn, lastBlock, false);
+      }
+
       generateAndEmitAsm("CHECKPC", lastInsn, lastBlock, false);
     }
   }
