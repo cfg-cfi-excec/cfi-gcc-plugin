@@ -397,8 +397,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return false;
   }
 
-  // TODO: remove exclusion list here again once libgcc is also compiled with LTO
-  //    This is a temoporary fix for soft fp lib and math functions
+  // This exclusion list is a (temoporary) fix for functions in libgcc (like soft fp lib and math functions).
+  // Those cannot be instrumented because LTO does not work for libgcc.
   bool GCC_PLUGIN::isLibGccFunction(std::string function_name) {
     std::vector<std::string> exclusions {
       "__floatsidf",
@@ -425,7 +425,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__gtdf2",
       "__fixunsdfsi",
       "__clzsi2",
-      "exp",  // todo: check if this is really needed for all variants. HCFI needs it
+      "exp",
       "pow",
       "sqrt",
       "cos",
@@ -434,8 +434,8 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "tan",
       "atan",
       "fabs",
-      "fabsf",
-      "__rt_io_end_of_flush"  //TODO: check if we can get rid of this
+      "fabsf"
+      //,"__rt_io_end_of_flush"  //TODO: check if we can get rid of this
     };
 
     for (std::string excl : exclusions) {
