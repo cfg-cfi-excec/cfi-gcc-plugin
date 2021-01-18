@@ -14,10 +14,8 @@
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
     } 
     
-    if (!isExcludedFromBackwardEdgeCfi(function_name)) {
-      generateAndEmitAsm("CFIBR " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
-      writeLabelToTmpFile(readLabelFromTmpFile()+1);
-    }
+    generateAndEmitAsm("CFIBR " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
@@ -26,10 +24,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-
-    if (function_name.compare("__main") != 0 && !isExcludedFromBackwardEdgeCfi(function_name)) {
-      generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
-    }
+    generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
 
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
@@ -58,14 +53,7 @@
   }
 
   void GCC_PLUGIN_HAFIX::onIndirectFunctionCall(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    if (!isExcludedFromForwardEdgeCfi(function_name)) {
-      rtx_insn *tmpInsn = NEXT_INSN(insn);
-      while (NOTE_P(tmpInsn)) {
-        tmpInsn = NEXT_INSN(tmpInsn);
-      }
-
-      generateAndEmitAsm("CFIRET " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
-    }
+    onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
   GCC_PLUGIN_HAFIX *GCC_PLUGIN_HAFIX::clone() {
