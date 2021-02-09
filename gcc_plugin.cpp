@@ -390,7 +390,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "atan",
       "fabs",
       "fabsf"
-      //,"__rt_io_end_of_flush"  //TODO: check if we can get rid of this
     };
 
     for (std::string excl : exclusions) {
