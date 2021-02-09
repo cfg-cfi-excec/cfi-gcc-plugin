@@ -4,7 +4,6 @@
 #include <fstream>
 #include <vector>
 
-// This is the first gcc header to be included
 #include "gcc-plugin.h"
 #include "plugin-version.h"
 #include <context.h>
@@ -22,7 +21,6 @@
 #include "gcc_plugin_excec.h"
 #include "gcc_plugin_icet.h"
 
-// We must assert that this plugin is GPL compatible
 int plugin_is_GPL_compatible = 1;
 
 static struct plugin_info cfi_plugin_info =

@@ -321,25 +321,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
-  // This exclusions is required because of a bug in our HAFIX implementation.
-  // Due to a problem with the shadow stack when calling the functions indirectly from the excluded function,
-  // a backward-edge CFI check would fail. This is (temporarily) solved with the exclusion.
-  // TODO: Fix for broken shadow stack in hardware
-  bool GCC_PLUGIN::isExcludedFromForwardEdgeCfi(std::string function_name) {
-    std::vector<std::string> exclusions {
-      "__rt_event_execute.constprop"
-    };
-
-    for (std::string excl : exclusions) {
-      if (excl.compare(function_name) == 0) {
-        //std::cerr << "FOUND EXCLUSION: " << excl << std::endl;
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   // This exclusion list is a (temoporary) fix for functions in libgcc (like soft fp lib and math functions).
   // Those cannot be instrumented because LTO does not work for libgcc.
   bool GCC_PLUGIN::isLibGccFunction(std::string function_name) {

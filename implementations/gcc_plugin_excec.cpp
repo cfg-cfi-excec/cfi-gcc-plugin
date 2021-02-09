@@ -98,14 +98,6 @@
         // add CFI instruction to announce an indirect call
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
-    } else if (isExcludedFromForwardEdgeCfi(function_name)) {
-      // this is a nasty (indirect) branch, which causes problems when CFI is enabled
-      generateAndEmitAsm(CFI_DISABLE, insn, block, false);
-      rtx_insn *tmpInsn = NEXT_INSN(insn);
-      while (NOTE_P(tmpInsn)) {
-        tmpInsn = NEXT_INSN(tmpInsn);
-      }
-      generateAndEmitAsm(CFI_ENABLE, tmpInsn, block, false);
     } else {
         std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
           << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
