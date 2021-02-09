@@ -321,6 +321,24 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
+  bool GCC_PLUGIN::isExcludedFromBackwardEdgeCfi(std::string function_name) {
+    std::vector<std::string> exclusions {
+      // This exclusion is required because the caller is in libgcc, e.g. in the function exp,
+      // but the callee is in the SDK.
+      // Thus, the caller cannot be instrumented.
+      "__errno"
+    };
+
+    for (std::string excl : exclusions) {
+      if (excl.compare(function_name) == 0) {
+        //std::cerr << "FOUND EXCLUSION: " << excl << std::endl;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // This exclusion list is a (temoporary) fix for functions in libgcc (like soft fp lib and math functions).
   // Those cannot be instrumented because LTO does not work for libgcc.
   bool GCC_PLUGIN::isLibGccFunction(std::string function_name) {

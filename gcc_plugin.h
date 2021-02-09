@@ -102,6 +102,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		bool isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name);
 		bool areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number);
 
+  		bool isExcludedFromBackwardEdgeCfi(std::string function_name);
 		bool isLibGccFunction(std::string function_name);
 
 	private:
