@@ -14,8 +14,10 @@
       generateAndEmitAsm(CFI_RESET, firstInsn, firstBlock, false);
     } 
     
-    generateAndEmitAsm("CFIBR " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
-    writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    if (!isExcludedFromBackwardEdgeCfi(function_name)) {
+      generateAndEmitAsm("CFIBR " + std::to_string(readLabelFromTmpFile()), firstInsn, firstBlock, false);
+      writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    }
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionRecursionEntry(std::string file_name, std::string function_name, basic_block firstBlock, rtx_insn *firstInsn) {
@@ -24,7 +26,10 @@
   }
 
   void GCC_PLUGIN_HAFIX::onFunctionReturn(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {
-    generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
+
+    if (function_name.compare("__main") != 0 && !isExcludedFromBackwardEdgeCfi(function_name)) {
+      generateAndEmitAsm("CFIDEL " + std::to_string(readLabelFromTmpFile()), lastInsn, lastBlock, false);
+    }
 
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
