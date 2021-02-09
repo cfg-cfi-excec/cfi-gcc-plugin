@@ -34,7 +34,7 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else {
+    } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
       // TODO: find out why exactly this hack is needed
       if (function_name.compare("plp_udma_enqueue") == 0) {
         generateAndEmitAsm("NOP", lastInsn, lastBlock, false);
