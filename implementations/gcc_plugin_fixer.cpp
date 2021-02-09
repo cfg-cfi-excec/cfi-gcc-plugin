@@ -35,7 +35,7 @@
     if (function_name.compare("__main") == 0) {
       // disable CFI from here on
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
-    } else {
+    } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
       // BNE is required for creating the same performance overhead as original FIXER approach (branch never taken)
       //generateAndEmitAsm("BNE zero,zero,exit", lastInsn, lastBlock, false);
       
