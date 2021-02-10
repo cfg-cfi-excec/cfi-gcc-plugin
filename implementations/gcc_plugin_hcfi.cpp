@@ -61,8 +61,7 @@
       generateAndEmitAsm("SETPCLABEL " + std::to_string(label), insn, block, false);
     } else if (!isLibGccFunction(function_name)) {
       generateAndEmitAsm("SETPC", insn, block, false);
-      std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
-        << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+      handleIndirectFunctionCallWithoutConfigEntry(file_name, function_name, line_number);
     } else {
       // Instead, add NOPs such that the runtime & code size is the same.
       // Two NOPs are added because backward edge cannot be instrumented.

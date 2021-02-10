@@ -104,6 +104,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 
   		bool isExcludedFromBackwardEdgeCfi(std::string function_name);
 		bool isLibGccFunction(std::string function_name);
+		void handleIndirectFunctionCallWithoutConfigEntry(std::string file_name, std::string function_name, int line_number);
 
 	private:
 		std::vector<CFG_FUNCTION_CALL> function_calls;

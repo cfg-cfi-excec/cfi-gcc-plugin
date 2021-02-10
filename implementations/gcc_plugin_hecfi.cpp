@@ -137,8 +137,7 @@
         generateAndEmitAsm("CFIPRC " + std::to_string(labelPRC), insn, block, true);
       }
     } else {
-      std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
-        << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+      handleIndirectFunctionCallWithoutConfigEntry(file_name, function_name, line_number);
     }
   }
 

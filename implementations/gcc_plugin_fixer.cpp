@@ -93,7 +93,7 @@
         generateAndEmitAsm("CFIFWD " + regName + ", " + std::to_string(label), insn, block, false);
       }
     } else {
-      onDirectFunctionCall(file_name, function_name, block, insn);
+      handleIndirectFunctionCallWithoutConfigEntry(file_name, function_name, line_number);
     }
   }
 

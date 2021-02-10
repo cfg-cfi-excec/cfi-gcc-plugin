@@ -321,6 +321,32 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
+  /* Some indirect function calls are not CFI-enforced because setup code is excluded from CFI.
+     This function checks whether a function should be excluded.
+     This is used for functions, where no config-file entry with CFG infos can be found. */
+  void GCC_PLUGIN::handleIndirectFunctionCallWithoutConfigEntry(std::string file_name, std::string function_name, int line_number) {
+    bool found = false;
+    std::vector<std::string> exclusions {
+      "__rt_event_execute",
+      "__rt_cbsys_exec",
+      "__rt_init",
+      "__rt_deinit"
+    };
+
+    for (std::string excl : exclusions) {
+      if (function_name.rfind(excl,0) == 0) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      std::cerr << "ERROR: No CFI rules for indirect call found: " << file_name.c_str() << ":" 
+        << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+      exit(1);
+    }
+  }
+
   bool GCC_PLUGIN::isExcludedFromBackwardEdgeCfi(std::string function_name) {
     std::vector<std::string> exclusions {
       // This exclusion is required because the caller is in libgcc, e.g. in the function exp,

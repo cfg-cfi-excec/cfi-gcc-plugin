@@ -99,8 +99,7 @@
         generateAndEmitAsm("CFICALL_I " + std::to_string(label), insn, block, false);
       }
     } else {
-        std::cerr << "Warning: NO CFI RULES FOR INDIRECT CALL IN " << file_name.c_str() << ":" 
-          << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+      handleIndirectFunctionCallWithoutConfigEntry(file_name, function_name, line_number);
     }
   }
 
