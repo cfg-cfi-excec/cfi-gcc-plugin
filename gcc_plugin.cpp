@@ -222,8 +222,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     std::vector<CFG_FUNCTION_CALL> calls = getIndirectFunctionCalls();
     unsigned numberOfUses = 0;
 
-    for(CFG_FUNCTION_CALL function_call : function_calls) {
+    for(CFG_FUNCTION_CALL function_call : calls) {
+      //std::cerr << "indirect call: " << function_call.function_name << std::endl;
       for(CFG_SYMBOL function : function_call.calls) {
+        //std::cerr << "indirectly called: " << function.symbol_name << std::endl;
+        //std::cerr << "current: " << function_name << std::endl;
         if (function.file_name.compare(file_name) == 0 
             && function.symbol_name.compare(function_name) == 0) {
           numberOfUses++;

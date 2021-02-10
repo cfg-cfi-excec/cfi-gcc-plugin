@@ -100,6 +100,8 @@
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
         //printFunctionCalls();
+
+        break;
       }
     }
   }

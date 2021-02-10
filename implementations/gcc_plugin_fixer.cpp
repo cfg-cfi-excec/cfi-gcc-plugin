@@ -106,6 +106,8 @@
         //printFunctionCalls();
         //printLabelJumps();
         //printIndirectlyCalledFunctions();
+
+        break;
       }
     }
   }

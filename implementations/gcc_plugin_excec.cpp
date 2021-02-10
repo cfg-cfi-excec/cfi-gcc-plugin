@@ -77,7 +77,7 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       bool trampolinesNeeded = areTrampolinesNeeded(file_name, function_name, line_number);
-      //std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
+      std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
       if (trampolinesNeeded) {
         std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
@@ -148,6 +148,8 @@
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
         //printFunctionCalls();
+
+        break;
       }
     }
   }
