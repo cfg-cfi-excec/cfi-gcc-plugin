@@ -80,7 +80,14 @@
       std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
       if (trampolinesNeeded) {
-        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(insn), 0, 0), 1), 0), 0)));
+        rtx outer = XVECEXP(PATTERN(insn), 0, 0);
+        
+        if (GET_CODE (outer) == SET) {
+          outer = XEXP(outer, 1);
+        }
+        
+        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(outer, 0), 0)));
+        std::cerr << "    Using register " << regName << std::endl;
 
         // increase stack pointer
         generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);
