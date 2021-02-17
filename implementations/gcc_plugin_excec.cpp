@@ -131,6 +131,13 @@
     }
   }
 
+  int GCC_PLUGIN_EXCEC::onIndirectJumpWithJumpTable(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+    writeLabelToTmpFile(readLabelFromTmpFile()+1);
+    generateAndEmitAsm("CFIJUMP_I " + std::to_string(readLabelFromTmpFile()), insn, block, false);
+
+    return readLabelFromTmpFile();
+  }
+
   void GCC_PLUGIN_EXCEC::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
 

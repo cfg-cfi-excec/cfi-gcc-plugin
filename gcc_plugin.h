@@ -85,7 +85,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
 		virtual void onIndirectJump				(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {}
- 
+		virtual int  onIndirectJumpWithJumpTable(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) { return 0; }
+
 		rtx_insn* generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after);
 		basic_block lastRealBlockInFunction();
 		std::string getRegisterNameForNumber(unsigned regno);
