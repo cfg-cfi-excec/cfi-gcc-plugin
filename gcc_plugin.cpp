@@ -78,7 +78,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 return 1;
               }
             }
-            
+
             rtx mem = XEXP(call, 0);
             rtx subExpr = XEXP(mem, 0);
             tree func = 0;
@@ -131,13 +131,17 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             if (GET_CODE (ret) == PARALLEL) {
               ret = XVECEXP(ret, 0, 0);
               if (ANY_RETURN_P(ret)) {
-              onFunctionReturn(file_name, function_name, bb, insn);
+                onFunctionReturn(file_name, function_name, bb, insn);
+              } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
+                // indirect jump with jump-table (e.g. from switch statement)
+                //std::cerr << "JUMPING indirectly (" << file_name << ":" << function_name << ":" << std::to_string(LOCATION_LINE(INSN_LOCATION (insn))) << ")" << std::endl;
+                onIndirectJump(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               }
             } else if (ANY_RETURN_P(ret)) {
               onFunctionReturn(file_name, function_name, bb, insn);
             } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
-              //It is not possible to extract line number here unfortunately
-              onIndirectJump(file_name, function_name, bb, insn);
+              //It is not possible to extract line number here unfortunately, so passing -1 as line number
+              onIndirectJump(file_name, function_name, -1, bb, insn);
               //std::cerr << "JUMPING to label indirectly: " << std::endl;
             }
             
@@ -196,24 +200,24 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
   void GCC_PLUGIN::printIndirectlyCalledFunctions() {
     for(CFG_SYMBOL cfg_symbol : indirectly_called_functions) {
-      std::cout << "Indirectly called function: " << cfg_symbol.symbol_name << " (" << cfg_symbol.file_name << ") with label " << std::to_string(cfg_symbol.label) << '\n';
+      std::cerr << "Indirectly called function: " << cfg_symbol.symbol_name << " (" << cfg_symbol.file_name << ") with label " << std::to_string(cfg_symbol.label) << '\n';
     }
   }
 
   void GCC_PLUGIN::printFunctionCalls() {
     for(CFG_FUNCTION_CALL function_call : function_calls) {
-      std::cout << "CALL (indirect call): " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
+      std::cerr << "CALL (indirect call): " << function_call.function_name << " (" << function_call.file_name << ":" << function_call.line_number << ")" << '\n';
       for(CFG_SYMBOL calls : function_call.calls) {
-        std::cout << "    calls: " << calls.symbol_name << " (" << calls.file_name << ")" << '\n';
+        std::cerr << "    calls: " << calls.symbol_name << " (" << calls.file_name << ")" << '\n';
       }
     }
   }
 
   void GCC_PLUGIN::printLabelJumps() {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
-      std::cout << "GOTO (indirect jump): " << label_jump.function_name << " (" << label_jump.file_name << ")" << '\n';
+      std::cerr << "GOTO (indirect jump): " << label_jump.function_name << " (" << label_jump.file_name << ")" << '\n';
       for(CFG_SYMBOL jumps : label_jump.jumps_to) {
-        std::cout << "    jumps to: " << label_jump.function_name << ":" << jumps.symbol_name << " (" << jumps.file_name << ")" << '\n';
+        std::cerr << "    jumps to: " << jumps.file_name << ":" << jumps.function_name << ":" << jumps.symbol_name  << '\n';
       }
     }
   }
@@ -271,15 +275,18 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       }
     }
 
-    //std::cerr << "NOT FOUND (getLabelForIndirectJumpSymbol): " << function_name << " -- " << symbol_name  << " -- " << file_name<< std::endl;
+    std::cerr << "NOT FOUND (getLabelForIndirectJumpSymbol): " << file_name << ":" << function_name << ":" << symbol_name << std::endl;
     return -1;
   }
 
-  int GCC_PLUGIN::getLabelForIndirectJump(std::string file_name, std::string function_name) {
+  int GCC_PLUGIN::getLabelForIndirectJump(std::string file_name, std::string function_name, int line_number) {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
       if (label_jump.file_name.compare(file_name) == 0) {
         if (label_jump.function_name.compare(function_name) == 0) {
-          return label_jump.label;
+          // line_number -1 means it is not available
+          if (line_number == -1 || label_jump.line_number == line_number) {
+            return label_jump.label;
+          }
         }
       }
     }
@@ -324,6 +331,12 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
+	void GCC_PLUGIN::handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name, int line_number) {
+    std::cerr << "ERROR: No CFI rules for indirect jump found: " << file_name.c_str() << ":" 
+      << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+    exit(1);
+  }
+
   /* Some indirect function calls are not CFI-enforced because setup code is excluded from CFI.
      This function checks whether a function should be excluded.
      This is used for functions, where no config-file entry with CFG infos can be found. */
@@ -333,7 +346,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       "__rt_event_execute",
       "__rt_cbsys_exec",
       "__rt_init",
-      "__rt_deinit"
+      "__rt_deinit",
+      "_prf",
+      "perform_attack.constprop",
+      "do_ctors",
+      "do_dtors"
     };
 
     for (std::string excl : exclusions) {
@@ -571,6 +588,13 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           function_name = line.substr(0, pos);
           line.erase(0, pos + delimiter.length());
 
+          // extract line_number
+          pos = line.find(delimiter);
+          line_number = line.substr(0, pos);
+          line.erase(0, pos + delimiter.length());
+          pos = line_number.find(attr_line);
+          line_number.erase(pos, attr_line.length());
+
           // extract jump label
           pos = line.find(delimiter);
           label = line.substr(0, pos-1);
@@ -581,6 +605,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           CFG_LABEL_JUMP cfg_label_jump;
           cfg_label_jump.file_name = file_name;
           cfg_label_jump.function_name = function_name;
+          cfg_label_jump.line_number = std::stoi(line_number);;
           cfg_label_jump.label = std::stoi(label);
 
           // extract possible jump targets
@@ -588,28 +613,44 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               token = line.substr(0, pos);
               line.erase(0, pos + delimiter.length());
 
+              // extract file name
               pos = token.find(delimiter_entry);
               token_file = token.substr(0, pos);
               token.erase(0, pos + delimiter_entry.length());
+
+              // extract function name
+              pos = token.find(delimiter_entry);
+              function_name = token.substr(0, pos);
+              token.erase(0, pos + delimiter_entry.length());
+
               token_name = token;
 
               if (!token_file.empty() && !token_name.empty()) {
                 CFG_SYMBOL tmp;
                 tmp.file_name = token_file;
+                tmp.function_name = function_name;
                 tmp.symbol_name = token_name;
                 cfg_label_jump.jumps_to.push_back(tmp);
               }
           }
 
           if (line.length() > 0) {
+              // extract file name
               pos = line.find(delimiter_entry);
               token_file = line.substr(0, pos);
               line.erase(0, pos + delimiter_entry.length());
+
+              // extract function name
+              pos = line.find(delimiter_entry);
+              function_name = line.substr(0, pos);
+              line.erase(0, pos + delimiter_entry.length());
+
               token_name = line;
 
               if (!token_file.empty() && !token_name.empty()) {
                 CFG_SYMBOL tmp;
                 tmp.file_name = token_file;
+                tmp.function_name = function_name;
                 tmp.symbol_name = token_name;
                 cfg_label_jump.jumps_to.push_back(tmp);
               }

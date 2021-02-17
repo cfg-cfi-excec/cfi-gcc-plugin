@@ -77,7 +77,7 @@
     int label = getLabelForIndirectFunctionCall(function_name, file_name, line_number);
     if (label >= 0) {
       bool trampolinesNeeded = areTrampolinesNeeded(file_name, function_name, line_number);
-      std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
+      //std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
       if (trampolinesNeeded) {
         rtx outer = XVECEXP(PATTERN(insn), 0, 0);
@@ -115,17 +115,19 @@
 
     if (label >= 0) {
       generateAndEmitAsm("CFICHECK " + std::to_string(label), insn, block, false);
+    } else {
+      std::cerr << "No label found..." << std::endl;
+      exit(1);
     }
   }
   
-  void GCC_PLUGIN_EXCEC::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    int label = getLabelForIndirectJump(file_name, function_name);
+  void GCC_PLUGIN_EXCEC::onIndirectJump(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
+    int label = getLabelForIndirectJump(file_name, function_name, line_number);
 
     if (label >= 0) {
       generateAndEmitAsm("CFIJUMP_I " + std::to_string(label), insn, block, false);
     } else {
-      std::cerr << "Warning: NO CFI RULES FOR INDIRECT JUMP IN " << file_name.c_str() << ":" 
-        << function_name.c_str() << "\n";
+      handleIndirectJumpWithoutConfigEntry(file_name, function_name, line_number);
     }
   }
 
@@ -155,6 +157,7 @@
         readConfigFile(argv[i].value);
         //prinExistingFunctions();
         //printFunctionCalls();
+        //printLabelJumps();
 
         break;
       }
