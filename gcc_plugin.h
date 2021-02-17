@@ -52,7 +52,6 @@ struct CFG_FUNCTION_CALL {
 struct CFG_LABEL_JUMP {
     std::string file_name;
     std::string function_name;
-    int line_number;
     int label;
     std::vector<CFG_SYMBOL> jumps_to;
 };
@@ -84,7 +83,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
-		virtual void onIndirectJump				(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {}
+		virtual void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual int  onIndirectJumpWithJumpTable(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) { return 0; }
 
 		rtx_insn* generateAndEmitAsm(std::string insn, rtx_insn* attachRtx, basic_block bb, bool after);
@@ -103,14 +102,14 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		int getLabelForIndirectlyCalledFunction(std::string function_name, std::string file_name);
  		int getLabelForIndirectFunctionCall(std::string function_name, std::string file_name, int line_number);
 		int getLabelForIndirectJumpSymbol(std::string file_name, std::string function_name, std::string symbol_name);
-		int getLabelForIndirectJump(std::string file_name, std::string function_name, int line_number);
+		int getLabelForIndirectJump(std::string file_name, std::string function_name);
 		bool isFunctionUsedInMultipleIndirectCalls(std::string file_name, std::string function_name);
 		bool areTrampolinesNeeded(std::string file_name, std::string function_name, int line_number);
 
   		bool isExcludedFromBackwardEdgeCfi(std::string function_name);
 		bool isLibGccFunction(std::string function_name);
 		void handleIndirectFunctionCallWithoutConfigEntry(std::string file_name, std::string function_name, int line_number);
-		void handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name, int line_number);
+		void handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name);
 
 	private:
 		std::vector<CFG_FUNCTION_CALL> function_calls;

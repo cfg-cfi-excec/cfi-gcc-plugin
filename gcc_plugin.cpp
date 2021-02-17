@@ -162,7 +162,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               onFunctionReturn(file_name, function_name, bb, insn);
             } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
               //It is not possible to extract line number here unfortunately, so passing -1 as line number
-              onIndirectJump(file_name, function_name, -1, bb, insn);
+              onIndirectJump(file_name, function_name, bb, insn);
               //std::cerr << "JUMPING to label indirectly: " << std::endl;
             }
             
@@ -300,14 +300,11 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return -1;
   }
 
-  int GCC_PLUGIN::getLabelForIndirectJump(std::string file_name, std::string function_name, int line_number) {
+  int GCC_PLUGIN::getLabelForIndirectJump(std::string file_name, std::string function_name) {
     for(CFG_LABEL_JUMP label_jump : label_jumps) {
       if (label_jump.file_name.compare(file_name) == 0) {
         if (label_jump.function_name.compare(function_name) == 0) {
-          // line_number -1 means it is not available
-          if (line_number == -1 || label_jump.line_number == line_number) {
-            return label_jump.label;
-          }
+          return label_jump.label;
         }
       }
     }
@@ -352,9 +349,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     return label_jumps;
   }
 
-	void GCC_PLUGIN::handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name, int line_number) {
+	void GCC_PLUGIN::handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name) {
     std::cerr << "ERROR: No CFI rules for indirect jump found: " << file_name.c_str() << ":" 
-      << function_name.c_str() << ":" << std::to_string( line_number) << "\n";
+      << function_name.c_str() << "\n";
     exit(1);
   }
 
@@ -609,13 +606,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           function_name = line.substr(0, pos);
           line.erase(0, pos + delimiter.length());
 
-          // extract line_number
-          pos = line.find(delimiter);
-          line_number = line.substr(0, pos);
-          line.erase(0, pos + delimiter.length());
-          pos = line_number.find(attr_line);
-          line_number.erase(pos, attr_line.length());
-
           // extract jump label
           pos = line.find(delimiter);
           label = line.substr(0, pos-1);
@@ -626,7 +616,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
           CFG_LABEL_JUMP cfg_label_jump;
           cfg_label_jump.file_name = file_name;
           cfg_label_jump.function_name = function_name;
-          cfg_label_jump.line_number = std::stoi(line_number);;
           cfg_label_jump.label = std::stoi(label);
 
           // extract possible jump targets

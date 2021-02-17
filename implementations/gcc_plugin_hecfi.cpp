@@ -149,13 +149,13 @@
     }
   }
   
-  void GCC_PLUGIN_HECFI::onIndirectJump(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {
-    int label = getLabelForIndirectJump(file_name, function_name, line_number);
+  void GCC_PLUGIN_HECFI::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+    int label = getLabelForIndirectJump(file_name, function_name);
 
     if (label >= 0) {
       generateAndEmitAsm("CFIPRJ " + std::to_string(label), insn, block, false);
     } else {
-      handleIndirectJumpWithoutConfigEntry(file_name, function_name, line_number);
+      handleIndirectJumpWithoutConfigEntry(file_name, function_name);
     }
   }
 
