@@ -121,6 +121,10 @@
     }
   }
   
+  void GCC_PLUGIN_EXCEC::onSwitchCase(int label, basic_block block, rtx_insn *insn) {
+    generateAndEmitAsm("CFICHECK " + std::to_string(label), insn, block, true);
+  }
+
   void GCC_PLUGIN_EXCEC::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectJump(file_name, function_name);
 

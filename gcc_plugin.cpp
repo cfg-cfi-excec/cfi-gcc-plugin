@@ -149,8 +149,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
 
                       if (GET_CODE (label_symbol) == LABEL_REF) {
                         rtx_insn * code_label = (rtx_insn *)XEXP(label_symbol, 0);
-                        // TODO: implement for all cfi variants
-                        generateAndEmitAsm("CFICHECK " + std::to_string(label), code_label, BLOCK_FOR_INSN(code_label), true);
+                        onSwitchCase(label, BLOCK_FOR_INSN(code_label), code_label);
                       }
                     }
 

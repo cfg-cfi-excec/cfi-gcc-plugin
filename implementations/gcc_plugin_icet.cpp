@@ -46,6 +46,10 @@
       generateAndEmitAsm(ENDBRANCH, insn, block, false);
     }
   }
+  
+  void GCC_PLUGIN_ICET::onSwitchCase(int label, basic_block block, rtx_insn *insn) {
+    generateAndEmitAsm(ENDBRANCH, insn, block, true);
+  }
 
   void GCC_PLUGIN_ICET::init()
   {

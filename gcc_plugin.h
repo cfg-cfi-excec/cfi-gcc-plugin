@@ -83,6 +83,7 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
+		virtual void onSwitchCase				(int label, basic_block block, rtx_insn *insn) {}
 		virtual void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual int  onIndirectJumpWithJumpTable(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) { return 0; }
 

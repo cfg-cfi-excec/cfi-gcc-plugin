@@ -149,6 +149,10 @@
     }
   }
   
+  void GCC_PLUGIN_HECFI::onSwitchCase(int label, basic_block block, rtx_insn *insn) {
+    generateAndEmitAsm("CFICHK " + std::to_string(label), insn, block, true);
+  }
+  
   void GCC_PLUGIN_HECFI::onIndirectJump(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     int label = getLabelForIndirectJump(file_name, function_name);
 
