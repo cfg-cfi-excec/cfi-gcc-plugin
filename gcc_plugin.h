@@ -16,6 +16,8 @@
 #include <tree-pass.h>
 #include <tree.h>
 #include <print-tree.h>
+#include <memmodel.h>
+#include <emit-rtl.h>
 #include "asmgen/AsmGen.h"
 #include "asmgen/InstrType.h"
 #include "asmgen/UpdatePoint.h"

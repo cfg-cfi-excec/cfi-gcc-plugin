@@ -38,6 +38,28 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     //std::cerr << "FILE NAME: " << file_name << std::endl;
     //std::cerr << "FUNCTION ADDRESS: " << static_cast<void*>(current_function_decl) << std::endl;
 
+    rtx_insn* first = get_insns();
+
+    for (rtx_insn * next = NEXT_INSN (first); next != NULL; next = NEXT_INSN (next)) {
+      if (GET_CODE (next) == JUMP_TABLE_DATA) {
+        rtx_insn *switch_insn = (rtx_insn *)PREV_INSN (PREV_INSN (PREV_INSN (next)));
+        generateAndEmitAsm("CFIJUMP_I 0xF", switch_insn, BLOCK_FOR_INSN(switch_insn), false);
+
+        rtx body = PATTERN(next);
+        debug_rtx(body);
+        int len = XVECLEN (body, 0);
+
+        for (int i = 0; i < len; i++) {
+          rtx label = XVECEXP(body, 0, i);
+
+          if (GET_CODE (label) == LABEL_REF) {
+            rtx_insn * code_label = (rtx_insn *)XEXP(label, 0);
+            generateAndEmitAsm("CFICHECK 0xF", code_label, BLOCK_FOR_INSN(code_label), true);
+          }
+        }
+      }
+    }
+
     try{
       basic_block bb;
       bool recursiveFunction = false;
@@ -48,7 +70,6 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       //std::cerr << LOCATION_FILE(INSN_LOCATION (firstInsn)) << ":" << function_name << std::endl;
 
       FOR_EACH_BB_FN(bb, cfun){
-          
         rtx_insn* insn;
         FOR_BB_INSNS (bb, insn) {
           if (CALL_P (insn) && InstrType::findCode(XEXP(insn, 3), CALL)) {
@@ -135,7 +156,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
               } else if (GET_CODE (ret) == SET && GET_CODE(XEXP(ret,1)) == REG) {
                 // indirect jump with jump-table (e.g. from switch statement)
                 //std::cerr << "JUMPING indirectly (" << file_name << ":" << function_name << ":" << std::to_string(LOCATION_LINE(INSN_LOCATION (insn))) << ")" << std::endl;
-                onIndirectJump(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
+                //onIndirectJump(file_name, function_name, LOCATION_LINE(INSN_LOCATION (insn)), bb, insn);
               }
             } else if (ANY_RETURN_P(ret)) {
               onFunctionReturn(file_name, function_name, bb, insn);
