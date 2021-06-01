@@ -102,9 +102,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 recursiveFunction = true;
                 onRecursiveFunctionCall(file_name, function_name, bb, insn);
               } else if (strcmp(fName, "setjmp") == 0) {
-                //debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
-                //debug_rtx(PREV_INSN(PREV_INSN(insn)));
-                //debug_rtx(PREV_INSN(insn));
+                /*
+                debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
+                debug_rtx(PREV_INSN(PREV_INSN(insn)));
+                debug_rtx(PREV_INSN(insn));
                 //debug_rtx(insn);
                 //std::cerr << "###################################################" << std::endl;
                 rtx tmp = PATTERN(PREV_INSN(insn));
@@ -121,12 +122,15 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 int index = pushBufferIdAndGetIndex(buffer_id);
                 //std::cerr << "SETJMP " << blubb << " with index " << index << std::endl;
                 //std::cerr << "###################################################" << std::endl;
+                */
 
-                onSetJumpFunctionCall(file_name, function_name, bb, insn, index);
+                // TODO: Don't use hardcoded index here
+                onSetJumpFunctionCall(file_name, function_name, bb, insn, 1);
               } else if (strcmp(fName, "longjmp") == 0) {
-                //debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
-                //debug_rtx(PREV_INSN(PREV_INSN(insn)));
-                //debug_rtx(PREV_INSN(insn));
+                /*
+                debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
+                debug_rtx(PREV_INSN(PREV_INSN(insn)));
+                debug_rtx(PREV_INSN(insn));
                 //debug_rtx(insn);
                 //std::cerr << "###################################################" << std::endl;
                 rtx tmp = PATTERN(PREV_INSN(insn));
@@ -143,8 +147,10 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 int index = pushBufferIdAndGetIndex(buffer_id);
                 //std::cerr << "LONGJMP " << blubb << " with index " << index << std::endl;                
                 //std::cerr << "###################################################" << std::endl;
+                */
 
-                onLongJumpFunctionCall(file_name, function_name, bb, insn, index);
+                // TODO: Don't use hardcoded index here
+                onLongJumpFunctionCall(file_name, function_name, bb, insn, 1);
               } else {
                 if (GET_CODE (set) != SET) {  
                   // This is a direct JAL
