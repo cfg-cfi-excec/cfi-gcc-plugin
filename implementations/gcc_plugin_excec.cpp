@@ -64,8 +64,7 @@
           // generateAndEmitAsm("CFICHECK 0x1", insn, lastBlock, true);
           // generateAndEmitAsm("CFICALL_I 0x0", insn, lastBlock, true);
 
-          // TODO: find out why CFIRET works here, and CFICHECK/CFICALL_I break execution
-          generateAndEmitAsm("CFIRET", insn, lastBlock, true);
+          generateAndEmitAsm("CFICHECK 0x0", insn, lastBlock, true);
 
           break;
         }
