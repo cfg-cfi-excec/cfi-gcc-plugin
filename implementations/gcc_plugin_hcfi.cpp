@@ -74,7 +74,7 @@
     onDirectFunctionCall(file_name, function_name, block, insn);
   }
 
-  void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
       
     rtx_insn *tmpInsn = NEXT_INSN(insn);
@@ -87,7 +87,7 @@
     generateAndEmitAsm("SJCFI " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
+  void GCC_PLUGIN_HCFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
     generateAndEmitAsm("LJCFI", insn, block, false);
   }
 

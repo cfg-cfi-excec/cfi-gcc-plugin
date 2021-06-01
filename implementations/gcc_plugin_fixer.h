@@ -16,6 +16,8 @@ class GCC_PLUGIN_FIXER : public GCC_PLUGIN {
 		void onDirectFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
 		void onIndirectFunctionCall		(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn);
 		void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
+		void onSetJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index);
+		void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index);
 
 	private:
 		void init();

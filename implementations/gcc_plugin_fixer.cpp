@@ -63,6 +63,16 @@
     }
   }
 
+  void GCC_PLUGIN_FIXER::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    // setjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+	
+  void GCC_PLUGIN_FIXER::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    // lonjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+
   void GCC_PLUGIN_FIXER::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(file_name, function_name, block, insn);
   }

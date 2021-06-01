@@ -141,9 +141,7 @@
     return readLabelFromTmpFile();
   }
 
-  void GCC_PLUGIN_EXCEC::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    writeLabelToTmpFile(readLabelFromTmpFile()+1);
-
+  void GCC_PLUGIN_EXCEC::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
     rtx_insn *tmpInsn = NEXT_INSN(insn);
     while (NOTE_P(tmpInsn)) {
       tmpInsn = NEXT_INSN(tmpInsn);
@@ -151,11 +149,11 @@
 
     // place cfisetjmp below actual setjmp() call
     // this is the place where longjmp() jumps to
-    generateAndEmitAsm("cfisetjmp " + std::to_string(readLabelFromTmpFile()), tmpInsn, block, false);
+    generateAndEmitAsm("cfisetjmp " + std::to_string(index), tmpInsn, block, false);
   }
 
-  void GCC_PLUGIN_EXCEC::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
-    generateAndEmitAsm("cfilongjmp", insn, block, false);
+  void GCC_PLUGIN_EXCEC::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    generateAndEmitAsm("cfilongjump " + std::to_string(index), insn, block, false);
   }
 
   void GCC_PLUGIN_EXCEC::init()

@@ -91,7 +91,7 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
             } else  if (((rtx_code)subExpr->code) == REG) {
               isDirectCall = false;
             } else {
-                std::cout << "An error occured..." << std::endl;
+                std::cerr << "An error occured..." << std::endl;
                 return 1;
             }
 
@@ -102,9 +102,49 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
                 recursiveFunction = true;
                 onRecursiveFunctionCall(file_name, function_name, bb, insn);
               } else if (strcmp(fName, "setjmp") == 0) {
-                onSetJumpFunctionCall(file_name, function_name, bb, insn);
+                //debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
+                //debug_rtx(PREV_INSN(PREV_INSN(insn)));
+                //debug_rtx(PREV_INSN(insn));
+                //debug_rtx(insn);
+                //std::cerr << "###################################################" << std::endl;
+                rtx tmp = PATTERN(PREV_INSN(insn));
+                //debug_rtx(tmp);
+                tmp = XEXP(tmp, 1);
+                //debug_rtx(tmp);
+                tmp = XEXP(tmp, 1);
+                //debug_rtx(tmp);
+                tree test = SYMBOL_REF_DECL(tmp);
+                //debug_tree(test);
+                //char *blubb = (char*)IDENTIFIER_POINTER (DECL_NAME (test) );
+                int buffer_id = (DECL_UID (test)) ;
+
+                int index = pushBufferIdAndGetIndex(buffer_id);
+                //std::cerr << "SETJMP " << blubb << " with index " << index << std::endl;
+                //std::cerr << "###################################################" << std::endl;
+
+                onSetJumpFunctionCall(file_name, function_name, bb, insn, index);
               } else if (strcmp(fName, "longjmp") == 0) {
-                onLongJumpFunctionCall(file_name, function_name, bb, insn);
+                //debug_rtx(PREV_INSN(PREV_INSN(PREV_INSN(insn))));
+                //debug_rtx(PREV_INSN(PREV_INSN(insn)));
+                //debug_rtx(PREV_INSN(insn));
+                //debug_rtx(insn);
+                //std::cerr << "###################################################" << std::endl;
+                rtx tmp = PATTERN(PREV_INSN(insn));
+                 //debug_rtx(tmp);
+                tmp = XEXP(tmp, 1);
+                //debug_rtx(tmp);
+                tmp = XEXP(tmp, 1);
+                //debug_rtx(tmp);
+                tree test = SYMBOL_REF_DECL(tmp);
+                //debug_tree(test);
+                //char *blubb = (char*)IDENTIFIER_POINTER (DECL_NAME (test) );
+                int buffer_id = (DECL_UID (test)) ;
+
+                int index = pushBufferIdAndGetIndex(buffer_id);
+                //std::cerr << "LONGJMP " << blubb << " with index " << index << std::endl;                
+                //std::cerr << "###################################################" << std::endl;
+
+                onLongJumpFunctionCall(file_name, function_name, bb, insn, index);
               } else {
                 if (GET_CODE (set) != SET) {  
                   // This is a direct JAL
@@ -463,6 +503,31 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
     }
 
     return false;
+  }
+
+  int GCC_PLUGIN::pushBufferIdAndGetIndex(int buffer_id) {
+    int index = -1;
+    int max_index = 0;
+
+    for(CFG_SJ_LJ_PAIR sj_lj_pair : sj_lj_pairs) {
+      if (sj_lj_pair.buffer_id == buffer_id) {
+        index = sj_lj_pair.index;
+      }
+      if (sj_lj_pair.index >= max_index) {
+        max_index = sj_lj_pair.index + 1;
+      }
+    } 
+
+    if (index == -1) {
+      CFG_SJ_LJ_PAIR sj_lj_pair;
+      sj_lj_pair.index = max_index;
+      sj_lj_pair.buffer_id = buffer_id;
+
+      sj_lj_pairs.push_back(sj_lj_pair);
+      index = max_index;
+    }
+    
+    return index;
   }
 
   void GCC_PLUGIN::readConfigFile(char * filename) {

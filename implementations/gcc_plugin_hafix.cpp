@@ -53,6 +53,16 @@
     }
   }
 
+  void GCC_PLUGIN_HAFIX::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int indexn) {
+    // setjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+	
+  void GCC_PLUGIN_HAFIX::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    // lonjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+
   void GCC_PLUGIN_HAFIX::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(file_name, function_name, block, insn);
   }

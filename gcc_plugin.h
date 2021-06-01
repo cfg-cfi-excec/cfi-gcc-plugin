@@ -56,6 +56,11 @@ struct CFG_LABEL_JUMP {
     std::vector<CFG_SYMBOL> jumps_to;
 };
 
+struct CFG_SJ_LJ_PAIR {
+	int buffer_id;
+	int index;
+};
+
 class GCC_PLUGIN : public rtl_opt_pass{
 	public:
 		GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, int argcounter);
@@ -79,8 +84,8 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		virtual void onFunctionExit				(std::string file_name, std::string function_name, basic_block lastBlock, rtx_insn *lastInsn) {}
 		virtual void onDirectFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onIndirectFunctionCall		(std::string file_name, std::string function_name, int line_number, basic_block block, rtx_insn *insn) {}
-		virtual void onSetJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
-		virtual void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
+		virtual void onSetJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {}
+		virtual void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {}
 		virtual void onRecursiveFunctionCall	(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {}
 		virtual void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn) {}
 		virtual void onSwitchCase				(int label, basic_block block, rtx_insn *insn) {}
@@ -112,10 +117,13 @@ class GCC_PLUGIN : public rtl_opt_pass{
 		void handleIndirectFunctionCallWithoutConfigEntry(std::string file_name, std::string function_name, int line_number);
 		void handleIndirectJumpWithoutConfigEntry(std::string file_name, std::string function_name);
 
+		int pushBufferIdAndGetIndex(int buffer_id);
+
 	private:
 		std::vector<CFG_FUNCTION_CALL> function_calls;
 		std::vector<CFG_LABEL_JUMP> label_jumps;
 		std::vector<CFG_SYMBOL> indirectly_called_functions;
+		std::vector<CFG_SJ_LJ_PAIR> sj_lj_pairs;
 
 };
 
