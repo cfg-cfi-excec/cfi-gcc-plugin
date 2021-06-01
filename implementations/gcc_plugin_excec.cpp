@@ -153,7 +153,7 @@
   }
 
   void GCC_PLUGIN_EXCEC::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
-    generateAndEmitAsm("cfilongjump " + std::to_string(index), insn, block, false);
+    generateAndEmitAsm("cfilongjmp " + std::to_string(index), insn, block, false);
   }
 
   void GCC_PLUGIN_EXCEC::init()
