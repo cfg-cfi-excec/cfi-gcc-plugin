@@ -94,6 +94,16 @@
     }
   }
 
+  void GCC_PLUGIN_HECFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int indexn) {
+    // setjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+	
+  void GCC_PLUGIN_HECFI::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    // lonjmp calls require normal instrumentation just as any other call
+    onDirectFunctionCall(file_name, function_name, block, insn);
+  }
+
   void GCC_PLUGIN_HECFI::onRecursiveFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn) {
     onDirectFunctionCall(file_name, function_name, block, insn);
   }
@@ -118,7 +128,13 @@
       //std::cerr << "#### TRAMPOLINES NEEDED: " << (trampolinesNeeded ? "YES" : "NO") << std::endl;
 
       if (trampolinesNeeded) {
-        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(XEXP(XVECEXP(PATTERN(indirectCall), 0, 0), 1), 0), 0)));
+        rtx outer = XVECEXP(PATTERN(indirectCall), 0, 0);
+        
+        if (GET_CODE (outer) == SET) {
+          outer = XEXP(outer, 1);
+        }
+        
+        std::string regName = getRegisterNameForNumber(REGNO(XEXP(XEXP(outer, 0), 0)));
 
         // increase stack pointer
         generateAndEmitAsm("addi	sp,sp,-4", insn, block, false);

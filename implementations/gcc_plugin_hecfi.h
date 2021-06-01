@@ -20,6 +20,8 @@ class GCC_PLUGIN_HECFI : public GCC_PLUGIN {
 		void onNamedLabel				(std::string file_name, std::string function_name, std::string label_name, basic_block block, rtx_insn *insn);
 		void onSwitchCase				(int label, basic_block block, rtx_insn *insn);
 		void onIndirectJump				(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn);
+		void onSetJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index);
+		void onLongJumpFunctionCall		(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index);
 		
 	private:
 		void emitTrampolines		(std::string file_name, std::string function_name, int line_number, std::string register_name, basic_block lastBlock, rtx_insn *lastInsn);
