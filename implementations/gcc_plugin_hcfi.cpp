@@ -36,7 +36,7 @@
       generateAndEmitAsm(CFI_DISABLE, lastInsn, lastBlock, false);
     } else if (!isExcludedFromBackwardEdgeCfi(function_name)) {
       // TODO: find out why exactly this hack is needed
-      if (function_name.compare("plp_udma_enqueue") == 0) {
+      if (function_name.rfind("plp_udma_enqueue", 0) == 0) {
         generateAndEmitAsm("NOP", lastInsn, lastBlock, false);
       }
 
@@ -75,6 +75,8 @@
   }
 
   void GCC_PLUGIN_HCFI::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
+    // setjmp needs to be instrumented as well
+    onDirectFunctionCall(file_name, function_name, block, insn);
     writeLabelToTmpFile(readLabelFromTmpFile()+1);
       
     rtx_insn *tmpInsn = NEXT_INSN(insn);
