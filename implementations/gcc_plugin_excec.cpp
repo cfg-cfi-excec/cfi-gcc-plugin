@@ -143,6 +143,14 @@
 
   void GCC_PLUGIN_EXCEC::onSetJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
     generateAndEmitAsm("cfisetjmp " + std::to_string(index), insn, block, false);
+
+    rtx_insn *tmpInsn = NEXT_INSN(insn);
+    while (NOTE_P(tmpInsn)) {
+      tmpInsn = NEXT_INSN(tmpInsn);
+    }
+
+    // TODO: generate label dynamically
+    generateAndEmitAsm("CFICHECK 0x1", insn, block, true);
   }
 
   void GCC_PLUGIN_EXCEC::onLongJumpFunctionCall(std::string file_name, std::string function_name, basic_block block, rtx_insn *insn, int index) {
