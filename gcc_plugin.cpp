@@ -562,7 +562,9 @@ GCC_PLUGIN::GCC_PLUGIN(gcc::context *ctxt, struct plugin_argument *arguments, in
       pos = 0;
       //std::cout << "LINE READ: " << line << std::endl;
 
-      if (line.find(calls_title) != std::string::npos) {
+      if (line.rfind("//", 0) == 0) { // Comments
+        continue;
+      } else if (line.find(calls_title) != std::string::npos) {
         section_jumps = false;
         section_functions = false;
         section_calls = true;
